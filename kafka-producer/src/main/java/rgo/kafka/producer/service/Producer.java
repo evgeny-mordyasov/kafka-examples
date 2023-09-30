@@ -11,6 +11,7 @@ import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Producer {
 
@@ -19,6 +20,7 @@ public class Producer {
     private final KafkaProducer<Long, String> kafkaProducer;
     private final ScheduledExecutorService pushingExecutor;
     private final KafkaProducerProperties config;
+    private final AtomicBoolean isRunning = new AtomicBoolean();
 
     public Producer(KafkaProducerProperties properties) {
         kafkaProducer = new KafkaProducer<>(properties.getProperties());
@@ -27,7 +29,13 @@ public class Producer {
     }
 
     public void start() {
-        pushingExecutor.scheduleWithFixedDelay(this::pushing, 0L, config.getDelayMs(), TimeUnit.MILLISECONDS);
+        if (canStartPushing()) {
+            pushingExecutor.scheduleWithFixedDelay(this::pushing, 0L, config.getDelayMs(), TimeUnit.MILLISECONDS);
+        }
+    }
+
+    private boolean canStartPushing() {
+        return isRunning.compareAndSet(false, true);
     }
 
     private void pushing() {
