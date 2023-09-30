@@ -7,6 +7,9 @@
     <groupId>ru.gold.ordance</groupId>
     <artifactId>kafka-examples</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <modules>
+        <module>kafka-producer</module>
+    </modules>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -15,8 +18,14 @@
         <relativePath/>
     </parent>
 
+    <packaging>pom</packaging>
+
     <properties>
         <java.version>17</java.version>
     </properties>
 
+    <dependencyManagement>
+        <dependencies>
+        </dependencies>
+    </dependencyManagement>
 </project>
