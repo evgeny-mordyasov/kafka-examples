@@ -6,6 +6,7 @@ public class KafkaConsumerProperties {
 
     private String topic;
     private long waitPollMs;
+    private int threadPoolSize;
     private Map<String, Object> properties;
 
     public String getTopic() {
@@ -22,6 +23,14 @@ public class KafkaConsumerProperties {
 
     public void setWaitPollMs(long waitPollMs) {
         this.waitPollMs = waitPollMs;
+    }
+
+    public int getThreadPoolSize() {
+        return threadPoolSize;
+    }
+
+    public void setThreadPoolSize(int threadPoolSize) {
+        this.threadPoolSize = threadPoolSize;
     }
 
     public Map<String, Object> getProperties() {

@@ -31,7 +31,7 @@ public class Consumer {
 
     public Consumer(KafkaConsumerProperties properties, List<DataHandler> handlers) {
         kafkaConsumer = new KafkaConsumer<>(properties.getProperties());
-        executor = Executors.newFixedThreadPool(10);
+        executor = Executors.newFixedThreadPool(properties.getThreadPoolSize());
         pollingExecutor = Executors.newSingleThreadScheduledExecutor(runnable -> new Thread(runnable, "producer-kafka-polling"));
         config = properties;
         this.handlers = handlers;
