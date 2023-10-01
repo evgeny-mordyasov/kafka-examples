@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import rgo.kafka.consumer.at.most.once.properties.KafkaConsumerProperties;
 import rgo.kafka.consumer.at.most.once.service.handler.DataHandler;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -35,10 +37,11 @@ public class Consumer {
         this.handlers = handlers;
     }
 
+    @PostConstruct
     public void start() {
         if (canStartPolling()) {
             subscribeToTopic();
-            pollingExecutor.execute(this::polling);
+            startPolling();
         }
     }
 
@@ -48,35 +51,52 @@ public class Consumer {
 
     private void subscribeToTopic() {
         kafkaConsumer.subscribe(List.of(config.getTopic()));
-        LOGGER.info("Started polling from kafka topic: {}", config.getTopic());
+        LOGGER.info("Subscribe to the kafka topic: {}", config.getTopic());
+    }
+
+    private void startPolling() {
+        pollingExecutor.execute(this::polling);
+        LOGGER.info("Started polling.");
     }
 
     private void polling() {
-        Duration timeout = Duration.of(config.getWaitPollMs(), ChronoUnit.MILLIS);
+        try {
+            Duration timeout = Duration.of(config.getWaitPollMs(), ChronoUnit.MILLIS);
 
-        while (isRunning.get()) {
-            ConsumerRecords<Long, String> records = kafkaConsumer.poll(timeout);
-            LOGGER.info("Received messages. count={}", records.count());
+            while (isRunning.get()) {
+                ConsumerRecords<Long, String> records = kafkaConsumer.poll(timeout);
+                LOGGER.info("Received messages. partitions={}, count={}", records.partitions(), records.count());
 
-            List<ConsumerRecord<Long, String>> data =
-                    StreamSupport.stream(records.spliterator(), false).toList();
+                List<ConsumerRecord<Long, String>> data =
+                        StreamSupport.stream(records.spliterator(), false).toList();
 
-            executor.execute(() ->
-                    handlers.forEach(handler -> handler.handle(data)));
+                executor.execute(() ->
+                        handlers.forEach(handler -> handler.handle(data)));
+            }
+        } finally {
+            close();
         }
     }
 
-    public void close() {
+    private void close() {
+        kafkaConsumer.unsubscribe();
+        kafkaConsumer.close();
+    }
+
+    @PreDestroy
+    public void complete() {
         if (canCompletePolling()) {
-            pollingExecutor.shutdown();
-            executor.shutdown();
-            kafkaConsumer.unsubscribe();
-            kafkaConsumer.close();
-            LOGGER.info("Closed.");
+            completePolling();
         }
     }
 
     private boolean canCompletePolling() {
         return isRunning.compareAndSet(true, false);
+    }
+
+    private void completePolling() {
+        pollingExecutor.shutdown();
+        executor.shutdown();
+        LOGGER.info("Completed polling.");
     }
 }

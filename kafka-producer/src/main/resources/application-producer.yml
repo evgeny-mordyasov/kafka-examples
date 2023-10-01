@@ -1,5 +1,5 @@
 kafka-producer:
-  delayMs: 1000
+  delayMs: 500
   topic: string-values
   properties:
     "[client.id]": kafka-producer

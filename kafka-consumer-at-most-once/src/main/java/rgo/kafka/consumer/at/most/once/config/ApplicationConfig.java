@@ -26,8 +26,6 @@ public class ApplicationConfig {
 
     @Bean
     public Consumer start(List<DataHandler> handlers) {
-        Consumer consumer = new Consumer(kafkaConsumerProperties(), handlers);
-        consumer.start();
-        return consumer;
+       return new Consumer(kafkaConsumerProperties(), handlers);
     }
 }

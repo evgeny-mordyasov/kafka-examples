@@ -13,3 +13,4 @@ kafka-consumer:
     "[heartbeat.interval.ms]": 500
     "[key.deserializer]": org.apache.kafka.common.serialization.LongDeserializer
     "[value.deserializer]": org.apache.kafka.common.serialization.StringDeserializer
+    "[allow.auto.create.topics]": false
