@@ -61,21 +61,28 @@ public class Consumer {
 
     private void polling() {
         try {
-            Duration timeout = Duration.of(config.getWaitPollMs(), ChronoUnit.MILLIS);
-
-            while (isRunning.get()) {
-                ConsumerRecords<Long, String> records = kafkaConsumer.poll(timeout);
-                LOGGER.info("Received messages. partitions={}, count={}", records.partitions(), records.count());
-
-                List<ConsumerRecord<Long, String>> data =
-                        StreamSupport.stream(records.spliterator(), false).toList();
-
-                executor.execute(() ->
-                        handlers.forEach(handler -> handler.handle(data)));
-            }
+            fetchRecords();
         } finally {
             close();
         }
+    }
+
+    private void fetchRecords() {
+        Duration timeout = Duration.of(config.getWaitPollMs(), ChronoUnit.MILLIS);
+
+        while (isRunning.get()) {
+            ConsumerRecords<Long, String> records = kafkaConsumer.poll(timeout);
+            LOGGER.info("Received messages. partitions={}, count={}", records.partitions(), records.count());
+
+            List<ConsumerRecord<Long, String>> data = toList(records);
+            executor.execute(() -> handlers.forEach(handler -> handler.handle(data)));
+        }
+    }
+
+    private static List<ConsumerRecord<Long, String>> toList(ConsumerRecords<Long, String> records) {
+        return StreamSupport
+                .stream(records.spliterator(), false)
+                .toList();
     }
 
     private void close() {
