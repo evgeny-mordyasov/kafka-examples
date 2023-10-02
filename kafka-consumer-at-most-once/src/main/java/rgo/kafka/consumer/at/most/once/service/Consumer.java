@@ -72,8 +72,6 @@ public class Consumer {
 
         while (isRunning.get()) {
             ConsumerRecords<Long, String> records = kafkaConsumer.poll(timeout);
-            LOGGER.info("Received messages. partitions={}, count={}", records.partitions(), records.count());
-
             List<ConsumerRecord<Long, String>> data = toList(records);
             executor.execute(() -> handlers.forEach(handler -> handler.handle(data)));
         }

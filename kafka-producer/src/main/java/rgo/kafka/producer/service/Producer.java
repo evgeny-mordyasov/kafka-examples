@@ -52,7 +52,7 @@ public class Producer {
             if (exception != null) {
                 LOGGER.error("Failed to send message: ", exception);
             } else {
-                LOGGER.info("The message was sent. offset={}", metadata.offset());
+                LOGGER.info("The message was sent. offset={}, partition={}", metadata.offset(), metadata.partition());
             }
         };
     }

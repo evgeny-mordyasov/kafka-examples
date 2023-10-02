@@ -13,6 +13,6 @@ public class LoggingDataHandler implements DataHandler {
     @Override
     public void handle(List<ConsumerRecord<Long, String>> data) {
         data.forEach(record ->
-                LOGGER.info("Handle message. offset={}, value={}", record.offset(), record.value()));
+                LOGGER.info("Handle message. offset={}, partition={}, value={}", record.offset(), record.partition(), record.value()));
     }
 }
