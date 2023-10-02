@@ -68,12 +68,16 @@ public class Consumer {
     }
 
     private void fetchRecords() {
-        Duration timeout = Duration.of(config.getWaitPollMs(), ChronoUnit.MILLIS);
+        Duration timeout = Duration.of(config.getTimeoutPollMs(), ChronoUnit.MILLIS);
 
         while (isRunning.get()) {
-            ConsumerRecords<Long, String> records = kafkaConsumer.poll(timeout);
-            List<ConsumerRecord<Long, String>> data = toList(records);
-            executor.execute(() -> handlers.forEach(handler -> handler.handle(data)));
+            try {
+                ConsumerRecords<Long, String> records = kafkaConsumer.poll(timeout);
+                List<ConsumerRecord<Long, String>> data = toList(records);
+                executor.execute(() -> handlers.forEach(handler -> handler.handle(data)));
+            } catch (Exception e) {
+                LOGGER.error("An unexpected exception, but the polling continued.", e);
+            }
         }
     }
 

@@ -5,7 +5,7 @@ import java.util.Map;
 public class KafkaConsumerProperties {
 
     private String topic;
-    private long waitPollMs;
+    private long timeoutPollMs;
     private int threadPoolSize;
     private Map<String, Object> properties;
 
@@ -17,12 +17,12 @@ public class KafkaConsumerProperties {
         this.topic = topic;
     }
 
-    public long getWaitPollMs() {
-        return waitPollMs;
+    public long getTimeoutPollMs() {
+        return timeoutPollMs;
     }
 
-    public void setWaitPollMs(long waitPollMs) {
-        this.waitPollMs = waitPollMs;
+    public void setTimeoutPollMs(long timeoutPollMs) {
+        this.timeoutPollMs = timeoutPollMs;
     }
 
     public int getThreadPoolSize() {

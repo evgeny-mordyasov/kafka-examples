@@ -1,6 +1,6 @@
 kafka-consumer:
   topic: string-values
-  waitPollMs: 300
+  timeoutPollMs: 300
   threadPoolSize: 10
   properties:
     "[group.id]": consumer-at-most-once
