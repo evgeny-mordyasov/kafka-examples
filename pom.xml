@@ -19,6 +19,7 @@
 
     <modules>
         <module>kafka-at-most-once</module>
+        <module>kafka-simple</module>
     </modules>
 
     <properties>
