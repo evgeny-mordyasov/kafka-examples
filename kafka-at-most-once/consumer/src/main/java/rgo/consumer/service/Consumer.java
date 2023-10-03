@@ -73,6 +73,8 @@ public class Consumer {
         while (isRunning.get()) {
             try {
                 ConsumerRecords<Long, String> records = kafkaConsumer.poll(timeout);
+                if (records.isEmpty()) continue;
+
                 List<ConsumerRecord<Long, String>> data = toList(records);
                 executor.execute(() -> handlers.forEach(handler -> handler.handle(data)));
             } catch (Exception e) {
