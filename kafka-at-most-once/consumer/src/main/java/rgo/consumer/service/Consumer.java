@@ -15,6 +15,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.StreamSupport;
 
@@ -79,6 +80,7 @@ public class Consumer {
                 executor.execute(() -> handlers.forEach(handler -> handler.handle(data)));
             } catch (Exception e) {
                 LOGGER.error("An unexpected exception, but the polling continued.", e);
+                sleep();
             }
         }
     }
@@ -87,6 +89,14 @@ public class Consumer {
         return StreamSupport
                 .stream(records.spliterator(), false)
                 .toList();
+    }
+
+    private void sleep() {
+        try {
+            TimeUnit.MILLISECONDS.sleep(config.getTimeoutSleepMs());
+        } catch (InterruptedException ignored) {
+            LOGGER.warn("Interrupted while sleeping.");
+        }
     }
 
     private void close() {

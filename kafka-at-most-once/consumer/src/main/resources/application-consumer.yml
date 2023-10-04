@@ -2,6 +2,7 @@ kafka-consumer:
   topic: string-values
   timeoutPollMs: 300
   threadPoolSize: 10
+  timeoutSleepMs: 300
   properties:
     "[group.id]": consumer-at-most-once
     "[bootstrap.servers]": localhost:9092
