@@ -8,14 +8,11 @@ import org.slf4j.LoggerFactory;
 import rgo.consumer.properties.KafkaConsumerProperties;
 import rgo.consumer.service.handler.DataHandler;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.StreamSupport;
 
@@ -33,12 +30,11 @@ public class Consumer {
     public Consumer(KafkaConsumerProperties properties, List<DataHandler> handlers) {
         kafkaConsumer = new KafkaConsumer<>(properties.getProperties());
         executor = Executors.newFixedThreadPool(properties.getThreadPoolSize());
-        pollingExecutor = Executors.newSingleThreadScheduledExecutor(runnable -> new Thread(runnable, "consumer-kafka-polling"));
+        pollingExecutor = Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "consumer-kafka-polling"));
         config = properties;
         this.handlers = handlers;
     }
 
-    @PostConstruct
     public void start() {
         if (canStartPolling()) {
             subscribeToTopic();
@@ -80,7 +76,6 @@ public class Consumer {
                 executor.execute(() -> handlers.forEach(handler -> handler.handle(data)));
             } catch (Exception e) {
                 LOGGER.error("An unexpected exception, but the polling continued.", e);
-                sleep();
             }
         }
     }
@@ -91,20 +86,11 @@ public class Consumer {
                 .toList();
     }
 
-    private void sleep() {
-        try {
-            TimeUnit.MILLISECONDS.sleep(config.getTimeoutSleepMs());
-        } catch (InterruptedException ignored) {
-            LOGGER.warn("Interrupted while sleeping.");
-        }
-    }
-
     private void close() {
         kafkaConsumer.unsubscribe();
         kafkaConsumer.close();
     }
 
-    @PreDestroy
     public void complete() {
         if (canCompletePolling()) {
             completePolling();

@@ -24,8 +24,10 @@ public class ApplicationConfig {
         return new LoggingDataHandler();
     }
 
-    @Bean
+    @Bean(destroyMethod = "complete")
     public Consumer consumer(List<DataHandler> handlers) {
-       return new Consumer(kafkaConsumerProperties(), handlers);
+        Consumer consumer = new Consumer(kafkaConsumerProperties(), handlers);
+        consumer.start();
+        return consumer;
     }
 }

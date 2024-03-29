@@ -30,8 +30,13 @@ public class Producer {
 
     public void start() {
         if (canStartPushing()) {
-            pushingExecutor.scheduleWithFixedDelay(this::pushing, 0L, config.getDelayMs(), TimeUnit.MILLISECONDS);
+            startPushing();
         }
+    }
+
+    private void startPushing() {
+        pushingExecutor.scheduleWithFixedDelay(this::pushing, 0L, config.getDelayMs(), TimeUnit.MILLISECONDS);
+        LOGGER.info("Started pushing.");
     }
 
     private boolean canStartPushing() {
@@ -55,5 +60,25 @@ public class Producer {
                 LOGGER.info("The message was sent. offset={}, partition={}", metadata.offset(), metadata.partition());
             }
         };
+    }
+
+    public void complete() {
+        if (canCompletePushing()) {
+            completePushing();
+            close();
+        }
+    }
+
+    private boolean canCompletePushing() {
+        return isRunning.compareAndSet(true, false);
+    }
+
+    private void completePushing() {
+        pushingExecutor.shutdown();
+        LOGGER.info("Completed pushing.");
+    }
+
+    private void close() {
+        kafkaProducer.close();
     }
 }

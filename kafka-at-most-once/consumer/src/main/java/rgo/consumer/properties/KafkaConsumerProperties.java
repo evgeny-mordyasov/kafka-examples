@@ -7,7 +7,6 @@ public class KafkaConsumerProperties {
     private String topic;
     private long timeoutPollMs;
     private int threadPoolSize;
-    private long timeoutSleepMs;
     private Map<String, Object> properties;
 
     public String getTopic() {
@@ -32,14 +31,6 @@ public class KafkaConsumerProperties {
 
     public void setThreadPoolSize(int threadPoolSize) {
         this.threadPoolSize = threadPoolSize;
-    }
-
-    public long getTimeoutSleepMs() {
-        return timeoutSleepMs;
-    }
-
-    public void setTimeoutSleepMs(long timeoutSleepMs) {
-        this.timeoutSleepMs = timeoutSleepMs;
     }
 
     public Map<String, Object> getProperties() {
