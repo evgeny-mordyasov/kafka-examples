@@ -19,7 +19,7 @@
 
     <modules>
         <module>native-kafka</module>
-        <module>kafka-simple</module>
+        <module>simple-kafka</module>
     </modules>
 
     <properties>
