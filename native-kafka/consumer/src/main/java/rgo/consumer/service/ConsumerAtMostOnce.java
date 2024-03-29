@@ -16,9 +16,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.StreamSupport;
 
-public class Consumer {
+@SuppressWarnings("Duplicates")
+public class ConsumerAtMostOnce {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Consumer.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConsumerAtMostOnce.class);
 
     private final KafkaConsumer<Long, String> kafkaConsumer;
     private final ExecutorService executor;
@@ -27,7 +28,7 @@ public class Consumer {
     private final List<DataHandler> handlers;
     private final AtomicBoolean isRunning = new AtomicBoolean();
 
-    public Consumer(KafkaConsumerProperties properties, List<DataHandler> handlers) {
+    public ConsumerAtMostOnce(KafkaConsumerProperties properties, List<DataHandler> handlers) {
         kafkaConsumer = new KafkaConsumer<>(properties.getProperties());
         executor = Executors.newFixedThreadPool(properties.getThreadPoolSize());
         pollingExecutor = Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "consumer-kafka-polling"));

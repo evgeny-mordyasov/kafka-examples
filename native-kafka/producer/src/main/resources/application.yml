@@ -1,0 +1,37 @@
+spring:
+  config:
+    activate:
+      on-profile: at-most-once
+
+kafka-producer-at-most-once:
+  delayMs: 500
+  topic: string-values
+  properties:
+    "[client.id]": kafka-producer-at-most-once
+    "[bootstrap.servers]": localhost:9092
+    "[acks]": '0'
+    "[key.serializer]": org.apache.kafka.common.serialization.LongSerializer
+    "[value.serializer]": org.apache.kafka.common.serialization.StringSerializer
+    "[batch.size]": 16384
+    "[linger.ms]": 0
+    "[enable.idempotence]": false
+    "[retries]": 0
+---
+spring:
+  config:
+    activate:
+      on-profile: at-least-once
+
+kafka-producer-at-least-once:
+  delayMs: 500
+  topic: string-values
+  properties:
+    "[client.id]": kafka-producer-at-least-once
+    "[bootstrap.servers]": localhost:9092
+    "[acks]": 'all'
+    "[key.serializer]": org.apache.kafka.common.serialization.LongSerializer
+    "[value.serializer]": org.apache.kafka.common.serialization.StringSerializer
+    "[batch.size]": 16384
+    "[linger.ms]": 0
+    "[enable.idempotence]": false
+    "[retries]": 5

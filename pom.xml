@@ -18,7 +18,7 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>kafka-at-most-once</module>
+        <module>native-kafka</module>
         <module>kafka-simple</module>
     </modules>
 

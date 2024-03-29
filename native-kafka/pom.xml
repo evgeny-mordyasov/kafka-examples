@@ -10,7 +10,7 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>kafka-at-most-once</artifactId>
+    <artifactId>native-kafka</artifactId>
 
     <packaging>pom</packaging>
 
