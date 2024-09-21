@@ -15,8 +15,8 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>consumer</module>
-        <module>producer</module>
+        <module>native-kafka-consumer</module>
+        <module>native-kafka-producer</module>
     </modules>
 
 </project>
