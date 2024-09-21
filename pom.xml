@@ -20,6 +20,7 @@
     <modules>
         <module>native-kafka</module>
         <module>simple-kafka</module>
+        <module>spring-kafka</module>
     </modules>
 
     <properties>

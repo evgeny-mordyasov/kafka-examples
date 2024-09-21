@@ -1,0 +1,12 @@
+spring:
+  kafka:
+    bootstrapServers: localhost:9092
+    consumer:
+      client-id: pod-name
+      group-id: consumer
+      auto-offset-reset: latest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      properties:
+        allow.auto.create.topics: false
+
