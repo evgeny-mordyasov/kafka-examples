@@ -1,8 +1,11 @@
 package rgo.simple;
 
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -22,26 +25,32 @@ import static org.apache.kafka.clients.consumer.ConsumerConfig.MAX_POLL_INTERVAL
 import static org.apache.kafka.clients.consumer.ConsumerConfig.MAX_POLL_RECORDS_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG;
-import static rgo.simple.CommonUtils.BOOTSTRAP_SERVERS;
-import static rgo.simple.CommonUtils.TOPIC;
+import static rgo.simple.CommonProperties.BOOTSTRAP_SERVERS;
+import static rgo.simple.CommonProperties.TOPIC;
 
-public class Consumer {
+public class SimpleConsumer {
 
-    private static final Duration TIMEOUT_POLL_MS = Duration.of(300L, ChronoUnit.MILLIS);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SimpleConsumer.class);
+    private static final Duration TIMEOUT_POLL_MS = Duration.of(1000L, ChronoUnit.MILLIS);
 
     public static void main(String[] args) {
         pollingLoop();
     }
 
     private static void pollingLoop() {
-        KafkaConsumer<Long, String> kafkaConsumer = new KafkaConsumer<>(properties());
-        kafkaConsumer.subscribe(List.of(TOPIC));
+        try (Consumer<Long, String> consumer = new KafkaConsumer<>(properties())) {
+            consumer.subscribe(List.of(TOPIC));
 
-        while (true) {
-            ConsumerRecords<Long, String> records = kafkaConsumer.poll(TIMEOUT_POLL_MS);
-            List<ConsumerRecord<Long, String>> data = toList(records);
-            data.forEach(record ->
-                    System.out.printf("Handle message. offset=%s, partition=%s, value=%s%n", record.offset(), record.partition(), record.value()));
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    List<ConsumerRecord<Long, String>> messages = toList(consumer.poll(TIMEOUT_POLL_MS));
+                    messages.forEach(SimpleConsumer::logMessage);
+                } catch (Exception e) {
+                    LOGGER.error("Error occurred while consuming messages.", e);
+                }
+            }
+
+            consumer.unsubscribe();
         }
     }
 
@@ -66,5 +75,10 @@ public class Consumer {
         return StreamSupport
                 .stream(records.spliterator(), false)
                 .toList();
+    }
+
+    private static void logMessage(ConsumerRecord<Long, String> message) {
+        LOGGER.info("Handle message: t-p@o:{}-{}@{}, k:{}, v:{}, h:{}",
+                message.topic(), message.partition(), message.offset(), message.key(), message.value(), message.headers());
     }
 }

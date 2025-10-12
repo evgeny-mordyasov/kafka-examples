@@ -2,10 +2,14 @@ package rgo.simple;
 
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 import static org.apache.kafka.clients.producer.ProducerConfig.ACKS_CONFIG;
@@ -17,24 +21,30 @@ import static org.apache.kafka.clients.producer.ProducerConfig.KEY_SERIALIZER_CL
 import static org.apache.kafka.clients.producer.ProducerConfig.LINGER_MS_CONFIG;
 import static org.apache.kafka.clients.producer.ProducerConfig.RETRIES_CONFIG;
 import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG;
-import static rgo.simple.CommonUtils.BOOTSTRAP_SERVERS;
-import static rgo.simple.CommonUtils.TOPIC;
+import static rgo.simple.CommonProperties.BOOTSTRAP_SERVERS;
+import static rgo.simple.CommonProperties.TOPIC;
 
-public class Producer {
+public class SimpleProducer {
 
-    private static final long DELAY_MS = 500L;
+    private static final Logger LOGGER = LoggerFactory.getLogger(SimpleProducer.class);
+    private static final long DELAY_MS = 1000L;
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
         pushingLoop();
     }
 
-    private static void pushingLoop() throws InterruptedException {
-        KafkaProducer<Long, String> kafkaProducer = new KafkaProducer<>(properties());
-
-        while (true) {
-            ProducerRecord<Long, String> producerRecord = new ProducerRecord<>(TOPIC, randomString());
-            kafkaProducer.send(producerRecord, callback());
-            TimeUnit.MILLISECONDS.sleep(DELAY_MS);
+    private static void pushingLoop() {
+        try (Producer<Long, String> producer = new KafkaProducer<>(properties())) {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    ProducerRecord<Long, String> message = new ProducerRecord<>(TOPIC, randomKey(), randomValue());
+                    producer.send(message, callback());
+                    TimeUnit.MILLISECONDS.sleep(DELAY_MS);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    LOGGER.warn("Thread interrupted during sleep.");
+                }
+            }
         }
     }
 
@@ -52,17 +62,20 @@ public class Producer {
         return properties;
     }
 
-    private static String randomString() {
+    private static Long randomKey() {
+        return ThreadLocalRandom.current().nextLong();
+    }
+
+    private static String randomValue() {
         return UUID.randomUUID().toString();
     }
 
     private static Callback callback() {
         return (metadata, exception) -> {
             if (exception != null) {
-                System.err.println("Failed to send message: ");
-                exception.printStackTrace();
+                LOGGER.error("Failed to send message.", exception);
             } else {
-                System.out.printf("The message was sent. offset=%s, partition=%s%n", metadata.offset(), metadata.partition());
+                LOGGER.info("The message was sent. metadata = {}", metadata);
             }
         };
     }
