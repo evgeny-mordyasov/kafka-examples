@@ -22,7 +22,7 @@ public class ConsumerAtLeastOnce {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConsumerAtLeastOnce.class);
 
     private final KafkaConsumer<Long, String> kafkaConsumer;
-    private final ExecutorService executor;
+    private final ExecutorService handlerExecutor;
     private final ExecutorService pollingExecutor;
     private final KafkaConsumerProperties config;
     private final List<DataHandler> handlers;
@@ -30,7 +30,7 @@ public class ConsumerAtLeastOnce {
 
     public ConsumerAtLeastOnce(KafkaConsumerProperties properties, List<DataHandler> handlers) {
         kafkaConsumer = new KafkaConsumer<>(properties.getProperties());
-        executor = Executors.newFixedThreadPool(properties.getThreadPoolSize());
+        handlerExecutor = Executors.newFixedThreadPool(properties.getThreadPoolSize());
         pollingExecutor = Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "consumer-kafka-polling"));
         config = properties;
         this.handlers = handlers;
@@ -71,10 +71,13 @@ public class ConsumerAtLeastOnce {
         while (isRunning.get()) {
             try {
                 ConsumerRecords<Long, String> records = kafkaConsumer.poll(timeout);
-                if (records.isEmpty()) continue;
+                if (records.isEmpty()) {
+                    LOGGER.debug("No more records to consume.");
+                    continue;
+                }
 
                 List<ConsumerRecord<Long, String>> data = toList(records);
-                executor.execute(() -> handlers.forEach(handler -> handler.handle(data)));
+                handlerExecutor.execute(() -> handlers.forEach(handler -> handler.handle(data)));
                 kafkaConsumer.commitSync();
             } catch (Exception e) {
                 LOGGER.error("An unexpected exception, but the polling continued.", e);
@@ -105,7 +108,7 @@ public class ConsumerAtLeastOnce {
 
     private void completePolling() {
         pollingExecutor.shutdown();
-        executor.shutdown();
+        handlerExecutor.shutdown();
         LOGGER.info("Completed polling.");
     }
 }

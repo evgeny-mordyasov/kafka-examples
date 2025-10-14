@@ -1,40 +1,9 @@
-spring:
-  config:
-    activate:
-      on-profile: at-most-once
-
-kafka-consumer-at-most-once:
+kafka-consumer:
   topic: string-values
   timeoutPollMs: 300
   threadPoolSize: 10
   properties:
-    "[group.id]": consumer-at-most-once
     "[bootstrap.servers]": localhost:9092
-    "[enable.auto.commit]": true
-    "[auto.commit.interval.ms]": 5000
-    "[auto.offset.reset]": latest
-    "[max.poll.records]": 10
-    "[max.poll.interval.ms]": 5000
-    "[session.timeout.ms]": 10000
-    "[heartbeat.interval.ms]": 500
-    "[key.deserializer]": org.apache.kafka.common.serialization.LongDeserializer
-    "[value.deserializer]": org.apache.kafka.common.serialization.StringDeserializer
-    "[allow.auto.create.topics]": false
----
-spring:
-  config:
-    activate:
-      on-profile: at-least-once
-
-kafka-consumer-at-least-once:
-  topic: string-values
-  timeoutPollMs: 300
-  threadPoolSize: 10
-  properties:
-    "[group.id]": consumer-at-least-once
-    "[bootstrap.servers]": localhost:9092
-    "[enable.auto.commit]": false
-    "[auto.commit.interval.ms]": 0
     "[auto.offset.reset]": latest
     "[max.poll.records]": 10
     "[max.poll.interval.ms]": 5000

@@ -3,46 +3,22 @@ package rgo.nativekafka.producer.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import rgo.nativekafka.producer.properties.KafkaProducerProperties;
-import rgo.nativekafka.producer.service.Producer;
+import rgo.nativekafka.producer.service.NativeProducer;
 
 @Configuration
-public class ApplicationConfig {
+class ApplicationConfig {
 
-    @Configuration
-    @Profile("at-most-once")
-    static class AtMostOnceConfig {
-
-        @Bean
-        @ConfigurationProperties("kafka-producer-at-most-once")
-        public KafkaProducerProperties kafkaProducerProperties() {
-            return new KafkaProducerProperties();
-        }
-
-        @Bean(destroyMethod = "complete")
-        public Producer producer() {
-            Producer producer = new Producer(kafkaProducerProperties());
-            producer.start();
-            return producer;
-        }
+    @Bean
+    @ConfigurationProperties("kafka-producer")
+    public KafkaProducerProperties kafkaProducerProperties() {
+        return new KafkaProducerProperties();
     }
 
-    @Configuration
-    @Profile("at-least-once")
-    static class AtLeastOnceConfig {
-
-        @Bean
-        @ConfigurationProperties("kafka-producer-at-least-once")
-        public KafkaProducerProperties kafkaProducerProperties() {
-            return new KafkaProducerProperties();
-        }
-
-        @Bean(destroyMethod = "complete")
-        public Producer producer() {
-            Producer producer = new Producer(kafkaProducerProperties());
-            producer.start();
-            return producer;
-        }
+    @Bean(destroyMethod = "complete")
+    public NativeProducer producer() {
+        NativeProducer nativeProducer = new NativeProducer(kafkaProducerProperties());
+        nativeProducer.start();
+        return nativeProducer;
     }
 }

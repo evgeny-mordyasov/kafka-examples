@@ -12,7 +12,8 @@ public class LoggingDataHandler implements DataHandler {
 
     @Override
     public void handle(List<ConsumerRecord<Long, String>> data) {
-        data.forEach(record ->
-                LOGGER.info("Handle message. offset={}, partition={}, value={}", record.offset(), record.partition(), record.value()));
+        data.forEach(message ->
+                LOGGER.info("Handle message: t-p@o:{}-{}@{}, k:{}, v:{}, h:{}",
+                        message.topic(), message.partition(), message.offset(), message.key(), message.value(), message.headers()));
     }
 }

@@ -1,0 +1,5 @@
+kafka-producer:
+  properties:
+    "[client.id]": kafka-producer-at-most-once
+    "[acks]": '1'
+    "[retries]": 0
