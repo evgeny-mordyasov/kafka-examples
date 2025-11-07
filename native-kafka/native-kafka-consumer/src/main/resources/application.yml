@@ -1,9 +1,15 @@
+podName: developer-host
 kafka-consumer:
   topic: string-values
-  timeoutPollMs: 300
-  threadPoolSize: 10
+  checkTimeoutMillis: 5_000
+  pollTimeoutMillis: 1_000
+  closeTimeoutMillis: 15_000
   properties:
     "[bootstrap.servers]": localhost:9092
+    "[group.id]": consumer
+    "[enable.auto.commit]": false
+    "[auto.commit.interval.ms]": 0
+    "[client.id]": string-values@${podName}
     "[auto.offset.reset]": latest
     "[max.poll.records]": 10
     "[max.poll.interval.ms]": 5000

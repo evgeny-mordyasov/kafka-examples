@@ -1,5 +1,0 @@
-kafka-consumer:
-  properties:
-    "[group.id]": consumer-at-least-once
-    "[enable.auto.commit]": false
-    "[auto.commit.interval.ms]": 0

@@ -1,10 +1,8 @@
 package rgo.nativekafka.consumer.service.handler;
 
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-
-import java.util.List;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 
 public interface DataHandler {
 
-    void handle(List<ConsumerRecord<Long, String>> data);
+    void handle(ConsumerRecords<Long, String> records);
 }
