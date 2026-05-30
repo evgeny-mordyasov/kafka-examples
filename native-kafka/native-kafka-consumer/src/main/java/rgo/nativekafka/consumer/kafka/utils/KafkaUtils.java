@@ -4,7 +4,7 @@ import jakarta.annotation.Nonnull;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.PartitionInfo;
-import rgo.nativekafka.consumer.utils.Asserts;
+import rgo.nativekafka.common.Asserts;
 
 import java.time.Duration;
 import java.util.List;

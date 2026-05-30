@@ -1,4 +1,4 @@
-package rgo.nativekafka.consumer.utils;
+package rgo.nativekafka.common;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;

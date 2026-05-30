@@ -10,14 +10,14 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rgo.nativekafka.common.ConsumerFactory;
 import rgo.nativekafka.consumer.api.RequestMessage;
 import rgo.nativekafka.consumer.exception.BatchProcessingException;
-import rgo.nativekafka.consumer.kafka.ConsumerFactory;
 import rgo.nativekafka.consumer.kafka.utils.KafkaUtils;
 import rgo.nativekafka.consumer.service.DataHandler;
 import rgo.nativekafka.consumer.service.metrics.MetricsService;
 import rgo.nativekafka.consumer.spring.properties.KafkaConsumerProperties;
-import rgo.nativekafka.consumer.utils.Asserts;
+import rgo.nativekafka.common.Asserts;
 
 import java.time.Duration;
 import java.util.ArrayList;

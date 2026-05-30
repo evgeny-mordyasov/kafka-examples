@@ -13,6 +13,13 @@
     <artifactId>native-kafka-consumer-async-handler</artifactId>
 
     <dependencies>
+        <!-- self-modules -->
+        <dependency>
+            <groupId>ru.gold.ordance</groupId>
+            <artifactId>common</artifactId>
+        </dependency>
+        <!-- /self-modules -->
+
         <!-- spring -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -20,13 +27,7 @@
         </dependency>
         <!-- spring -->
 
-        <!-- kafka -->
-        <dependency>
-            <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka-clients</artifactId>
-        </dependency>
-        <!-- kafka -->
-
+        <!-- metrics -->
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
@@ -35,5 +36,6 @@
             <groupId>io.prometheus</groupId>
             <artifactId>prometheus-metrics-tracer-initializer</artifactId>
         </dependency>
+        <!-- /metrics -->
     </dependencies>
 </project>

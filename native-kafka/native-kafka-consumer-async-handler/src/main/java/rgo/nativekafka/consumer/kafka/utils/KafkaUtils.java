@@ -6,9 +6,9 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.PartitionInfo;
+import rgo.nativekafka.common.Asserts;
 import rgo.nativekafka.consumer.api.Metadata;
 import rgo.nativekafka.consumer.api.RequestMessage;
-import rgo.nativekafka.consumer.utils.Asserts;
 
 import java.time.Duration;
 import java.time.Instant;

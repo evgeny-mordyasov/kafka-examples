@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import rgo.nativekafka.consumer.kafka.ConsumerFactory;
+import rgo.nativekafka.common.ConsumerFactory;
 import rgo.nativekafka.consumer.kafka.consumer.NativeConsumer;
 import rgo.nativekafka.consumer.service.DataHandler;
 import rgo.nativekafka.consumer.service.LoggingDataHandler;
