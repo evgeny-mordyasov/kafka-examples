@@ -39,7 +39,7 @@ public class ApplicationConfig {
         private static final Logger LOGGER = LoggerFactory.getLogger(ManuallyConfig.class);
 
         @Bean
-        ConcurrentMessageListenerContainer<String, String> ConcurrentMessageListenerContainer(
+        ConcurrentMessageListenerContainer<String, String> concurrentMessageListenerContainer(
                 ConcurrentKafkaListenerContainerFactory<String, String> factory
         ) {
             ConcurrentMessageListenerContainer<String, String> container = factory.createContainer(TOPIC);

@@ -16,6 +16,7 @@
 
     <modules>
         <module>native-kafka-consumer</module>
+        <module>native-kafka-consumer-async-handler</module>
         <module>native-kafka-producer</module>
     </modules>
 

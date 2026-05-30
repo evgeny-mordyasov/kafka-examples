@@ -3,10 +3,18 @@ package rgo.nativekafka.consumer.kafka.utils;
 import jakarta.annotation.Nonnull;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.PartitionInfo;
+import rgo.nativekafka.consumer.api.Metadata;
+import rgo.nativekafka.consumer.api.RequestMessage;
 import rgo.nativekafka.consumer.utils.Asserts;
 
 import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -36,5 +44,25 @@ public final class KafkaUtils {
     private static String shortClientId(@Nonnull String clientId) {
         int endIndex = clientId.indexOf('@');
         return clientId.substring(0, endIndex == -1 ? clientId.length() : endIndex);
+    }
+
+    public static long lagSec(ConsumerRecords<String, String> records) {
+        long time = Long.MAX_VALUE;
+        for (var rec : records) {
+            if (rec.timestamp() < time) {
+                time = rec.timestamp();
+            }
+        }
+        return (time == Long.MAX_VALUE) ? 0L : Math.max((new Date().getTime() - time) / 1_000, 0);
+    }
+
+    public static RequestMessage<String> rqMessage(ConsumerRecord<String, String> record) {
+        Metadata metadata = new Metadata(
+                record.topic(),
+                record.partition(),
+                record.offset(),
+                LocalDateTime.ofInstant(Instant.ofEpochMilli(record.timestamp()), ZoneId.systemDefault())
+        );
+        return new RequestMessage<>(record.key(), record.value(), metadata);
     }
 }

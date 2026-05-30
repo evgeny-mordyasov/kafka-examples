@@ -1,7 +1,6 @@
 package rgo.nativekafka.consumer.kafka.consumer;
 
 import org.apache.kafka.clients.consumer.Consumer;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.errors.WakeupException;
 import org.slf4j.Logger;
@@ -18,8 +17,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
-
-import static rgo.nativekafka.consumer.kafka.utils.KafkaUtils.shortClientId;
 
 public class NativeConsumer implements AutoCloseable {
 
@@ -43,13 +40,13 @@ public class NativeConsumer implements AutoCloseable {
         Asserts.positive(properties.getCloseTimeoutMillis(), "closeTimeoutMillis");
         Asserts.nonEmpty(properties.getProperties(), "properties");
         consumer = Asserts.nonNull(consumerFactory, "consumerFactory").create(properties.getProperties());
-        String clientId = Asserts.nonNull(properties.getProperties().get(ConsumerConfig.CLIENT_ID_CONFIG), "clientId").toString();
-        pollingExecutor = Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, shortClientId(clientId)));
+        String shortClientId = KafkaUtils.shortClientId(properties.getProperties());
+        pollingExecutor = Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, shortClientId));
         this.handler = handler;
     }
 
     public void checkConnect() {
-        KafkaUtils.checkConnect(
+        KafkaUtils.checkTopic(
                 consumer,
                 properties.getTopic(),
                 Duration.ofMillis(properties.getCheckTimeoutMillis())
