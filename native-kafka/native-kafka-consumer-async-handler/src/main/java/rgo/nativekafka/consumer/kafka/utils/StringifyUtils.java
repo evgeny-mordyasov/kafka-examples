@@ -15,7 +15,7 @@ public final class StringifyUtils {
     private StringifyUtils() {
     }
 
-    public static String briefRecord(ConsumerRecord<String, String> record) {
+    public static String briefRecord(ConsumerRecord<Long, String> record) {
         var timeType = record.timestampType() == null ? "time" : record.timestampType().name;
         var recTime = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss.SSS").withZone(ZoneId.systemDefault()).format(Instant.ofEpochMilli(record.timestamp()));
         return "{key=" + record.key() +
@@ -27,7 +27,7 @@ public final class StringifyUtils {
                 '}';
     }
 
-    public static String briefRecordWithoutValue(ConsumerRecord<String, String> record) {
+    public static String briefRecordWithoutValue(ConsumerRecord<Long, String> record) {
         var timeType = record.timestampType() == null ? "time" : record.timestampType().name;
         var recTime = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss.SSS").withZone(ZoneId.systemDefault()).format(Instant.ofEpochMilli(record.timestamp()));
         return "{key=" + record.key() +

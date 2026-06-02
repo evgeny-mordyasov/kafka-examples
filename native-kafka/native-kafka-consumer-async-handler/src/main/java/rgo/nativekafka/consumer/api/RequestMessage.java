@@ -1,7 +1,7 @@
 package rgo.nativekafka.consumer.api;
 
 public record RequestMessage<T>(
-        String key,
+        Long key,
         T payload,
         Metadata metadata
 ) {

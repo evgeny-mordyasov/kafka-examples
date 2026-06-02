@@ -46,7 +46,7 @@ public final class KafkaUtils {
         return clientId.substring(0, endIndex == -1 ? clientId.length() : endIndex);
     }
 
-    public static long lagSec(ConsumerRecords<String, String> records) {
+    public static long lagSec(ConsumerRecords<Long, String> records) {
         long time = Long.MAX_VALUE;
         for (var rec : records) {
             if (rec.timestamp() < time) {
@@ -56,7 +56,7 @@ public final class KafkaUtils {
         return (time == Long.MAX_VALUE) ? 0L : Math.max((new Date().getTime() - time) / 1_000, 0);
     }
 
-    public static RequestMessage<String> rqMessage(ConsumerRecord<String, String> record) {
+    public static RequestMessage<String> rqMessage(ConsumerRecord<Long, String> record) {
         Metadata metadata = new Metadata(
                 record.topic(),
                 record.partition(),

@@ -45,7 +45,7 @@ public class NativeConsumer implements AutoCloseable, ConsumerRebalanceListener 
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NativeConsumer.class);
 
-    private final Consumer<String, String> consumer;
+    private final Consumer<Long, String> consumer;
     private final DataHandler handler;
     private final MetricsService metricsService;
     private final KafkaConsumerProperties properties;
@@ -82,11 +82,13 @@ public class NativeConsumer implements AutoCloseable, ConsumerRebalanceListener 
     }
 
     public void run() {
-        pollingExecutor.scheduleWithFixedDelay(
-                this::loopPolling,
-                0,
-                properties.getPollTimeoutMillis(),
-                TimeUnit.MILLISECONDS);
+        if (state.compareAndSet(State.CREATED, State.STARTED)) {
+            pollingExecutor.scheduleWithFixedDelay(
+                    this::loopPolling,
+                    0,
+                    properties.getPollTimeoutMillis(),
+                    TimeUnit.MILLISECONDS);
+        }
     }
 
     private void loopPolling() {
@@ -147,20 +149,20 @@ public class NativeConsumer implements AutoCloseable, ConsumerRebalanceListener 
         return buffer.getCountOfVectors() > properties.getBufferThreshold();
     }
 
-    private void logRecords(ConsumerRecords<String, String> records) {
+    private void logRecords(ConsumerRecords<Long, String> records) {
         StringBuilder sb = new StringBuilder().append("Fetched (s=").append(records.count()).append("):");
         records.forEach(record -> sb.append("\n\t").append(briefRecord(record)));
         LOGGER.info(sb.toString());
     }
 
-    private void measure(ConsumerRecords<String, String> records) {
+    private void measure(ConsumerRecords<Long, String> records) {
         metricsService.reportIncomingMessages(records.count());
         if (!isOverflow()) {
             metricsService.reportConsumerLagSeconds(properties.getTopic(), lagSec(records));
         }
     }
 
-    private void handle(ConsumerRecords<String, String> records) {
+    private void handle(ConsumerRecords<Long, String> records) {
         List<RequestMessage<String>> messages = new ArrayList<>(records.count());
         records.forEach(record -> messages.add(KafkaUtils.rqMessage(record)));
         Future<Void> future = handler.handle(messages);
@@ -294,19 +296,19 @@ public class NativeConsumer implements AutoCloseable, ConsumerRebalanceListener 
         private final int size;
         private final Map<TopicPartition, Long> offsets;
 
-        public InFlightBatch(Future<Void> future, ConsumerRecords<String, String> records) {
+        public InFlightBatch(Future<Void> future, ConsumerRecords<Long, String> records) {
             this.future = future;
             this.size = records.count();
             this.offsets = maxOffsets(records);
         }
 
-        private Map<TopicPartition, Long> maxOffsets(ConsumerRecords<String, String> records) {
+        private Map<TopicPartition, Long> maxOffsets(ConsumerRecords<Long, String> records) {
             Map<TopicPartition, Long> maxOffsets = new HashMap<>();
             for (TopicPartition tp : records.partitions()) {
-                List<ConsumerRecord<String, String>> partitionRecords = records.records(tp);
+                List<ConsumerRecord<Long, String>> partitionRecords = records.records(tp);
 
                 long max = Long.MIN_VALUE;
-                for (ConsumerRecord<String, String> r : partitionRecords) {
+                for (ConsumerRecord<Long, String> r : partitionRecords) {
                     if (r.offset() > max) {
                         max = r.offset();
                     }
