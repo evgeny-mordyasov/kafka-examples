@@ -122,6 +122,10 @@ public class NativeConsumer implements AutoCloseable, ConsumerRebalanceListener 
             buffer.clear();
             metricsService.reportInFlightVectorsCount(0);
         }
+
+        if (state.get() == State.CLOSED) {
+            consumer.close();
+        }
     }
 
     private boolean isStarted() {
@@ -234,7 +238,6 @@ public class NativeConsumer implements AutoCloseable, ConsumerRebalanceListener 
 
     @Override
     public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
-        commitOffsets();
         Set<TopicPartition> prevAssigned = new HashSet<>(assignedPartitions);
         assignedPartitions.removeAll(partitions);
         LOGGER.info("On partitions revoked. prev={}, curr={}",
