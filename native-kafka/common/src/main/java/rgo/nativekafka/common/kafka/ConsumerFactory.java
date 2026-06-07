@@ -1,4 +1,4 @@
-package rgo.nativekafka.common;
+package rgo.nativekafka.common.kafka;
 
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.KafkaConsumer;

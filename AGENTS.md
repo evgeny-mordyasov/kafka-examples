@@ -25,7 +25,7 @@ clients, примеры на native Kafka API и примеры со Spring Kafk
   Spring Boot bootstrap-кодом.
 - `native-kafka/common/` - общие утилиты для native Kafka примеров.
 - `native-kafka/native-kafka-producer/` - producer на Kafka client API.
-- `native-kafka/native-kafka-consumer/` - consumer с синхронной обработкой.
+- `native-kafka/native-kafka-consumer-sync-handler/` - consumer с синхронной обработкой.
 - `native-kafka/native-kafka-consumer-async-handler/` - consumer с асинхронной
   обработкой и метриками Prometheus/Micrometer.
 - `spring-kafka/` - Maven parent для Spring Kafka примеров.

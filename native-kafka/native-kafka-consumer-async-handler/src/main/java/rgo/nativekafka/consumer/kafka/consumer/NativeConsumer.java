@@ -11,7 +11,7 @@ import org.apache.kafka.common.errors.WakeupException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rgo.nativekafka.common.Asserts;
-import rgo.nativekafka.common.ConsumerFactory;
+import rgo.nativekafka.common.kafka.ConsumerFactory;
 import rgo.nativekafka.common.api.RequestMessage;
 import rgo.nativekafka.common.kafka.KafkaUtils;
 import rgo.nativekafka.common.metrics.MetricsService;

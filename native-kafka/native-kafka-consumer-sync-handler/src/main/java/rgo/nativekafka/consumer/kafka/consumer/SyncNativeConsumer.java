@@ -8,7 +8,7 @@ import org.apache.kafka.common.errors.WakeupException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rgo.nativekafka.common.Asserts;
-import rgo.nativekafka.common.ConsumerFactory;
+import rgo.nativekafka.common.kafka.ConsumerFactory;
 import rgo.nativekafka.common.api.RequestMessage;
 import rgo.nativekafka.common.kafka.KafkaUtils;
 import rgo.nativekafka.common.metrics.MetricsService;
@@ -125,7 +125,7 @@ public class SyncNativeConsumer implements AutoCloseable, ConsumerRebalanceListe
         LOGGER.info(sb.toString());
     }
 
-    private void handle(ConsumerRecords<Long, String> records) throws Exception {
+    private void handle(ConsumerRecords<Long, String> records) {
         List<RequestMessage<String>> messages = new ArrayList<>(records.count());
         records.forEach(record -> messages.add(KafkaUtils.rqMessage(record)));
         handler.handle(messages);

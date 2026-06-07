@@ -10,7 +10,7 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>native-kafka-consumer</artifactId>
+    <artifactId>native-kafka-consumer-sync-handler</artifactId>
 
     <dependencies>
         <!-- self-modules -->
