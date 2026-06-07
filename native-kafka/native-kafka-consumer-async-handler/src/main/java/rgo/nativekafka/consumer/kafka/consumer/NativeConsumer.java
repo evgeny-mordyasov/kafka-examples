@@ -36,7 +36,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static java.util.concurrent.Future.State.FAILED;
 import static rgo.nativekafka.consumer.kafka.utils.KafkaUtils.lagSec;
 import static rgo.nativekafka.consumer.kafka.utils.StringifyUtils.briefPartitions;
 import static rgo.nativekafka.consumer.kafka.utils.StringifyUtils.briefRecord;
@@ -195,12 +194,15 @@ public class NativeConsumer implements AutoCloseable, ConsumerRebalanceListener 
 
             Future<Void> future = batch.getFuture();
             if (future.isDone()) {
-                if (future.state() == FAILED) {
-                    throw new BatchProcessingException("Failed to process message batch", future.exceptionNow());
+                var futureState = future.state();
+                switch (futureState) {
+                    case SUCCESS -> {
+                        completedBatches.add(batch);
+                        batch.getOffsets().forEach((k, v) -> completedMinOffsets.merge(k, v, Math::min));
+                    }
+                    case FAILED -> throw new BatchProcessingException("Failed to process message batch", future.exceptionNow());
+                    default -> throw new BatchProcessingException("Message batch processing was not completed successfully. State: " + futureState);
                 }
-
-                completedBatches.add(batch);
-                batch.getOffsets().forEach((k, v) -> completedMinOffsets.merge(k, v, Math::min));
             }
         }
 
