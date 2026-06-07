@@ -1,4 +1,4 @@
-package rgo.nativekafka.consumer.service.metrics;
+package rgo.nativekafka.common.metrics;
 
 public class MetricsService {
 

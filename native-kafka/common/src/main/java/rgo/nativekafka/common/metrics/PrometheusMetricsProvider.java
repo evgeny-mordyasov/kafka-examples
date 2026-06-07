@@ -1,4 +1,4 @@
-package rgo.nativekafka.consumer.service.metrics;
+package rgo.nativekafka.common.metrics;
 
 import io.prometheus.metrics.core.metrics.Counter;
 import io.prometheus.metrics.core.metrics.Gauge;

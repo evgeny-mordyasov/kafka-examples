@@ -1,4 +1,4 @@
-package rgo.nativekafka.consumer.service.metrics;
+package rgo.nativekafka.common.metrics;
 
 import io.prometheus.metrics.core.metrics.Counter;
 import io.prometheus.metrics.core.metrics.Gauge;
@@ -7,12 +7,12 @@ import io.prometheus.metrics.core.metrics.Summary;
 import io.prometheus.metrics.model.registry.PrometheusRegistry;
 import jakarta.annotation.Nonnull;
 
-import static rgo.nativekafka.consumer.service.metrics.PrometheusMetricsSupplier.CUSTOM_COUNTER_BUILDER;
-import static rgo.nativekafka.consumer.service.metrics.PrometheusMetricsSupplier.CUSTOM_GAUGE_BUILDER;
-import static rgo.nativekafka.consumer.service.metrics.PrometheusMetricsSupplier.CUSTOM_HISTOGRAM_BUILDER;
-import static rgo.nativekafka.consumer.service.metrics.PrometheusMetricsSupplier.CUSTOM_SUMMARY_BUILDER;
-import static rgo.nativekafka.consumer.service.metrics.PrometheusMetricsSupplier.RPC_COUNTER_BUILDER;
-import static rgo.nativekafka.consumer.service.metrics.PrometheusMetricsSupplier.RPC_LATENCY_BUILDER;
+import static rgo.nativekafka.common.metrics.PrometheusMetricsSupplier.CUSTOM_COUNTER_BUILDER;
+import static rgo.nativekafka.common.metrics.PrometheusMetricsSupplier.CUSTOM_GAUGE_BUILDER;
+import static rgo.nativekafka.common.metrics.PrometheusMetricsSupplier.CUSTOM_HISTOGRAM_BUILDER;
+import static rgo.nativekafka.common.metrics.PrometheusMetricsSupplier.CUSTOM_SUMMARY_BUILDER;
+import static rgo.nativekafka.common.metrics.PrometheusMetricsSupplier.RPC_COUNTER_BUILDER;
+import static rgo.nativekafka.common.metrics.PrometheusMetricsSupplier.RPC_LATENCY_BUILDER;
 
 public class PrometheusMetricsProviderImpl implements PrometheusMetricsProvider {
 

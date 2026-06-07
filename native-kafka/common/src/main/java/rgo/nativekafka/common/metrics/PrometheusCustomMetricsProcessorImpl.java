@@ -1,4 +1,4 @@
-package rgo.nativekafka.consumer.service.metrics;
+package rgo.nativekafka.common.metrics;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
@@ -48,11 +48,11 @@ public class PrometheusCustomMetricsProcessorImpl implements CustomMetricsProces
         metricsProvider
                 .getCustomGauge()
                 .labelValues(
-                        method,                   // CommonLabelName.METHOD
-                        emptyIfNull(status),      // CommonLabelName.STATUS
-                        emptyIfNull(direction),   // CommonLabelName.DIRECTION
-                        emptyIfNull(type),        // CommonLabelName.TYPE
-                        "")                       // CommonLabelName.ID
+                        method,
+                        emptyIfNull(status),
+                        emptyIfNull(direction),
+                        emptyIfNull(type),
+                        "")
                 .set(function.applyAsDouble(flag));
     }
 

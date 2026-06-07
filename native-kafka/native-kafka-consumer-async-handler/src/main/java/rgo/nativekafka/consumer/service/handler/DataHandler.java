@@ -1,6 +1,6 @@
-package rgo.nativekafka.consumer.service;
+package rgo.nativekafka.consumer.service.handler;
 
-import rgo.nativekafka.consumer.api.RequestMessage;
+import rgo.nativekafka.common.api.RequestMessage;
 
 import java.util.List;
 import java.util.concurrent.Future;

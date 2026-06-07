@@ -1,9 +1,9 @@
-package rgo.nativekafka.consumer.service;
+package rgo.nativekafka.consumer.service.handler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rgo.nativekafka.consumer.api.RequestMessage;
-import rgo.nativekafka.consumer.kafka.utils.StringifyUtils;
+import rgo.nativekafka.common.api.RequestMessage;
+import rgo.nativekafka.common.kafka.StringifyUtils;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;

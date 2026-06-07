@@ -1,4 +1,4 @@
-package rgo.nativekafka.consumer.api;
+package rgo.nativekafka.common.api;
 
 public record RequestMessage<T>(
         Long key,

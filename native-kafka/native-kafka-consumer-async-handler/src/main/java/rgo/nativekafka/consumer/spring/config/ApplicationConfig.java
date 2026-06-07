@@ -5,10 +5,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import rgo.nativekafka.common.ConsumerFactory;
+import rgo.nativekafka.common.metrics.MetricsService;
 import rgo.nativekafka.consumer.kafka.consumer.NativeConsumer;
-import rgo.nativekafka.consumer.service.DataHandler;
-import rgo.nativekafka.consumer.service.LoggingDataHandler;
-import rgo.nativekafka.consumer.service.metrics.MetricsService;
+import rgo.nativekafka.consumer.service.handler.DataHandler;
+import rgo.nativekafka.consumer.service.handler.LoggingDataHandler;
 import rgo.nativekafka.consumer.spring.properties.KafkaConsumerProperties;
 
 import java.util.Map;

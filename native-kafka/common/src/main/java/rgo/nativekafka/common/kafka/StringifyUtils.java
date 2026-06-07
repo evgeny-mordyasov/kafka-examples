@@ -1,8 +1,8 @@
-package rgo.nativekafka.consumer.kafka.utils;
+package rgo.nativekafka.common.kafka;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;
-import rgo.nativekafka.consumer.api.RequestMessage;
+import rgo.nativekafka.common.api.RequestMessage;
 
 import java.time.Instant;
 import java.time.ZoneId;

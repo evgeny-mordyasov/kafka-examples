@@ -1,4 +1,4 @@
-package rgo.nativekafka.consumer.api;
+package rgo.nativekafka.common.api;
 
 import java.time.LocalDateTime;
 
