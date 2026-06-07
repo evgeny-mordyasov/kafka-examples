@@ -66,9 +66,9 @@ public class NativeConsumer implements AutoCloseable, ConsumerRebalanceListener 
         Asserts.positive(properties.getCloseTimeoutMillis(), "closeTimeoutMillis");
         Asserts.positive(properties.getBufferThreshold(), "bufferThreshold");
         Asserts.nonEmpty(properties.getProperties(), "properties");
-        this.consumer = Asserts.nonNull(consumerFactory, "consumerFactory").create(properties.getProperties());
         this.handler = Asserts.nonNull(handler, "handler");
         this.metricsService = Asserts.nonNull(metricsService, "metricsService");
+        this.consumer = Asserts.nonNull(consumerFactory, "consumerFactory").create(properties.getProperties());
         String shortClientId = KafkaUtils.shortClientId(properties.getProperties());
         this.pollingExecutor = Executors.newSingleThreadScheduledExecutor(runnable -> new Thread(runnable, shortClientId));
     }
@@ -120,10 +120,6 @@ public class NativeConsumer implements AutoCloseable, ConsumerRebalanceListener 
             consumer.unsubscribe();
             buffer.clear();
             metricsService.reportInFlightVectorsCount(0);
-        }
-
-        if (state.get() == State.CLOSED) {
-            consumer.close();
         }
     }
 
@@ -258,10 +254,15 @@ public class NativeConsumer implements AutoCloseable, ConsumerRebalanceListener 
 
     @Override
     public void close() {
-        if (state.compareAndSet(State.STARTED, State.CLOSED)) {
-            consumer.wakeup();
-            pollingExecutor.shutdown();
+        State previousState = state.getAndSet(State.CLOSED);
+        if (previousState == State.CLOSED) {
+            return;
         }
+        if (previousState == State.STARTED) {
+            consumer.wakeup();
+        }
+        pollingExecutor.execute(consumer::close);
+        pollingExecutor.shutdown();
     }
 
     private enum State {
