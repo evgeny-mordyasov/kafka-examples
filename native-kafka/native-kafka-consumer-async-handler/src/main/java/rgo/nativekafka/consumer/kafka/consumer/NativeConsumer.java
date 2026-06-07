@@ -80,7 +80,7 @@ public class NativeConsumer implements AutoCloseable, ConsumerRebalanceListener 
                 Duration.ofMillis(properties.getCheckTimeoutMillis()));
     }
 
-    public void run() {
+    public synchronized void run() {
         if (state.compareAndSet(State.CREATED, State.STARTED)) {
             pollingExecutor.scheduleWithFixedDelay(
                     this::loopPolling,
@@ -253,7 +253,7 @@ public class NativeConsumer implements AutoCloseable, ConsumerRebalanceListener 
     }
 
     @Override
-    public void close() {
+    public synchronized void close() {
         State previousState = state.getAndSet(State.CLOSED);
         if (previousState == State.CLOSED) {
             return;
