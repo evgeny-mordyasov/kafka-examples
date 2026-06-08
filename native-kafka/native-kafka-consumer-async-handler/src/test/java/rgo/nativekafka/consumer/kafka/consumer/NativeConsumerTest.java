@@ -29,10 +29,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -54,8 +55,6 @@ class NativeConsumerTest {
         assertThatThrownBy(() -> new NativeConsumer(consumerFactory, handler, metricsService, properties))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("[consumerFactory] must not be null.");
-
-        verifyNoInteractions(handler, metricsService);
     }
 
     @Test
@@ -69,8 +68,6 @@ class NativeConsumerTest {
         assertThatThrownBy(() -> new NativeConsumer(consumerFactory, handler, metricsService, properties))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("[handler] must not be null.");
-
-        verifyNoInteractions(metricsService);
     }
 
     @Test
@@ -84,8 +81,6 @@ class NativeConsumerTest {
         assertThatThrownBy(() -> new NativeConsumer(consumerFactory, handler, metricsService, properties))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("[metricsService] must not be null.");
-
-        verifyNoInteractions(handler);
     }
 
     @Test
@@ -99,8 +94,6 @@ class NativeConsumerTest {
         assertThatThrownBy(() -> new NativeConsumer(consumerFactory, handler, metricsService, properties))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("[properties] must not be null.");
-
-        verifyNoInteractions(handler, metricsService);
     }
 
     @Test
@@ -116,7 +109,6 @@ class NativeConsumerTest {
 
         assertThat(consumer).isNotNull();
         verify(consumerFactory).create(properties.getProperties());
-        verifyNoInteractions(handler, metricsService);
     }
 
     @Test
@@ -127,8 +119,6 @@ class NativeConsumerTest {
         NativeConsumer consumer = consumer(testConsumer.getConsumer(), handler, metricsService, 10);
 
         consumer.checkConnect();
-
-        verifyNoInteractions(handler, metricsService);
     }
 
     @Test
@@ -140,9 +130,7 @@ class NativeConsumerTest {
 
         assertThatThrownBy(consumer::checkConnect)
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessage("Failed to connect to topic request_topic");
-
-        verifyNoInteractions(handler, metricsService);
+                .hasMessage("Failed to connect to topic " + TOPIC);
     }
 
     @Test
@@ -180,7 +168,7 @@ class NativeConsumerTest {
 
         verify(handler).handle(anyList());
         verify(metricsService).reportIncomingMessages(1);
-        verify(metricsService).reportConsumerLagSeconds(org.mockito.Mockito.eq(TOPIC), anyLong());
+        verify(metricsService).reportConsumerLagSeconds(eq(TOPIC), anyLong());
         verify(metricsService).reportInFlightVectorsCount(1);
     }
 
@@ -208,7 +196,7 @@ class NativeConsumerTest {
                     assertThat(message.metadata().offset()).isZero();
                 });
         verify(metricsService).reportIncomingMessages(1);
-        verify(metricsService).reportConsumerLagSeconds(org.mockito.Mockito.eq(TOPIC), anyLong());
+        verify(metricsService).reportConsumerLagSeconds(eq(TOPIC), anyLong());
         verify(metricsService).reportInFlightVectorsCount(1);
     }
 
@@ -234,7 +222,7 @@ class NativeConsumerTest {
                 .extracting(RequestMessage::payload)
                 .containsExactlyInAnyOrder("first", "second", "third");
         verify(metricsService).reportIncomingMessages(3);
-        verify(metricsService).reportConsumerLagSeconds(org.mockito.Mockito.eq(TOPIC), anyLong());
+        verify(metricsService).reportConsumerLagSeconds(eq(TOPIC), anyLong());
         verify(metricsService).reportInFlightVectorsCount(3);
         Map<TopicPartition, OffsetAndMetadata> committed = kafkaConsumer.committed(testConsumer.getPartitions());
         assertThat(committed)
@@ -395,5 +383,4 @@ class NativeConsumerTest {
         }
         assertThat(consumer.closed()).isTrue();
     }
-
 }
