@@ -96,8 +96,8 @@ public class NativeConsumer implements AutoCloseable, ConsumerRebalanceListener 
                 if (!records.isEmpty()) {
                     logRecords(records);
                     handle(records);
+                    consumer.commitSync();
                 }
-                consumer.commitSync();
             }
         } catch (WakeupException e) {
             LOGGER.warn("Kafka consumer has woken up.");
