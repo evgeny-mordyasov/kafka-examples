@@ -21,7 +21,7 @@ kafka-consumer:
     "[client.id]": string-values@${podName}
     "[auto.offset.reset]": latest
     "[max.poll.records]": 10
-    "[max.poll.interval.ms]": 5000
+    "[max.poll.interval.ms]": 300000
     "[session.timeout.ms]": 10000
     "[heartbeat.interval.ms]": 500
     "[key.deserializer]": org.apache.kafka.common.serialization.LongDeserializer
