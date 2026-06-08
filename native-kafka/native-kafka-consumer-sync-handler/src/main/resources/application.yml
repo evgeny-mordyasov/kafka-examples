@@ -1,4 +1,13 @@
 podName: developer-host
+management:
+  endpoints:
+    web:
+      exposure:
+        include: metrics,prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true
 kafka-consumer:
   topic: string-values
   checkTimeoutMillis: 5_000
