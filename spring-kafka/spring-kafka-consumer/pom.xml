@@ -12,18 +12,9 @@
     <artifactId>spring-kafka-consumer</artifactId>
 
     <dependencies>
-        <!-- spring-starter -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter</artifactId>
+            <artifactId>spring-boot-starter-kafka</artifactId>
         </dependency>
-        <!-- spring-starter -->
-
-        <!-- spring -->
-        <dependency>
-            <groupId>org.springframework.kafka</groupId>
-            <artifactId>spring-kafka</artifactId>
-        </dependency>
-        <!-- spring -->
     </dependencies>
 </project>
