@@ -30,9 +30,9 @@ import static rgo.nativekafka.common.kafka.KafkaUtils.lagSec;
 import static rgo.nativekafka.common.kafka.StringifyUtils.briefPartitions;
 import static rgo.nativekafka.common.kafka.StringifyUtils.briefRecord;
 
-public class SyncNativeConsumer implements AutoCloseable, ConsumerRebalanceListener {
+public class NativeConsumer implements AutoCloseable, ConsumerRebalanceListener {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SyncNativeConsumer.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(NativeConsumer.class);
 
     private final Consumer<Long, String> consumer;
     private final DataHandler handler;
@@ -42,7 +42,7 @@ public class SyncNativeConsumer implements AutoCloseable, ConsumerRebalanceListe
     private final ScheduledExecutorService pollingExecutor;
     private final List<TopicPartition> assignedPartitions = new ArrayList<>();
 
-    public SyncNativeConsumer(
+    public NativeConsumer(
             ConsumerFactory consumerFactory,
             DataHandler handler,
             MetricsService metricsService,
@@ -102,11 +102,10 @@ public class SyncNativeConsumer implements AutoCloseable, ConsumerRebalanceListe
         } catch (WakeupException e) {
             LOGGER.warn("Kafka consumer has woken up.");
         } catch (Exception e) {
-            LOGGER.error("Poll or message batch processing failed.", e);
-            metricsService.incFailedConsumerPollMainTopic();
+            LOGGER.error("Poll failed.", e);
+            metricsService.incFailedConsumerPoll();
         } finally {
             consumer.unsubscribe();
-            metricsService.reportInFlightVectorsCount(0);
         }
     }
 

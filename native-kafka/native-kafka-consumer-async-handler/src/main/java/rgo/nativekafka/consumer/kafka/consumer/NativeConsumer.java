@@ -116,7 +116,7 @@ public class NativeConsumer implements AutoCloseable, ConsumerRebalanceListener 
             LOGGER.warn("Kafka consumer has woken up.");
         } catch (Exception e) {
             LOGGER.error("Poll failed.", e);
-            metricsService.incFailedConsumerPollMainTopic();
+            metricsService.incFailedConsumerPoll();
         } finally {
             consumer.unsubscribe();
             buffer.clear();

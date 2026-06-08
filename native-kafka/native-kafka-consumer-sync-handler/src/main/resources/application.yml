@@ -6,7 +6,7 @@ kafka-consumer:
   closeTimeoutMillis: 15_000
   properties:
     "[bootstrap.servers]": localhost:9092
-    "[group.id]": consumer
+    "[group.id]": consumer-sync-handler
     "[enable.auto.commit]": false
     "[auto.commit.interval.ms]": 0
     "[client.id]": string-values@${podName}

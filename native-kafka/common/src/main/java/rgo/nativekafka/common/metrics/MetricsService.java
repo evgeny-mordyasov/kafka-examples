@@ -28,7 +28,7 @@ public class MetricsService {
         );
     }
 
-    public void incFailedConsumerPollMainTopic() {
+    public void incFailedConsumerPoll() {
         updateFailedConsumerPollMetric("request_topic", 1);
     }
 
