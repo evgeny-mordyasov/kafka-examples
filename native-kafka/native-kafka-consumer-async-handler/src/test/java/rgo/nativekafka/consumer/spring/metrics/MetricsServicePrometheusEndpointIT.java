@@ -16,7 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
         classes = Main.class,
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
-class MetricsServicePrometheusEndpointTest {
+class MetricsServicePrometheusEndpointIT {
 
     @LocalServerPort int port;
     private RestTestClient client;
@@ -33,7 +33,7 @@ class MetricsServicePrometheusEndpointTest {
     private NativeConsumer consumerAtLeastOnce;
 
     @Test
-    void prometheusEndpoint_ShouldExposeMetricsServiceMetrics() {
+    void customCountStatsTotal_exists() {
         EntityExchangeResult<String> response = client
                 .get()
                 .uri("/actuator/prometheus")
@@ -44,7 +44,20 @@ class MetricsServicePrometheusEndpointTest {
 
         assertThat(response.getResponseBody())
                 .contains("custom_count_stats_total{direction=\"\",method=\"kafka_incoming\",status=\"\",type=\"request_topic\"}")
-                .contains("custom_count_stats_total{direction=\"\",method=\"consumer_poll\",status=\"FAIL\",type=\"request_topic\"}")
+                .contains("custom_count_stats_total{direction=\"\",method=\"consumer_poll\",status=\"FAIL\",type=\"request_topic\"}");
+    }
+
+    @Test
+    void customGaugeStats_exists() {
+        EntityExchangeResult<String> response = client
+                .get()
+                .uri("/actuator/prometheus")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class)
+                .returnResult();
+
+        assertThat(response.getResponseBody())
                 .contains("custom_gauge_stats{direction=\"\",id=\"\",method=\"consumer_status\",status=\"\",type=\"request_topic\"}")
                 .contains("custom_gauge_stats{direction=\"\",id=\"\",method=\"lag_sec\",status=\"\",type=\"\"}")
                 .contains("custom_gauge_stats{direction=\"\",id=\"\",method=\"in_flight_vectors\",status=\"\",type=\"request_topic\"}");
