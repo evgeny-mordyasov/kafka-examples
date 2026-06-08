@@ -1,5 +1,6 @@
 package rgo.nativekafka.consumer.kafka.consumer;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -91,13 +92,7 @@ public class NativeConsumer implements AutoCloseable, ConsumerRebalanceListener 
             Duration timeout = Duration.ofMillis(properties.getPollTimeoutMillis());
 
             while (isStarted()) {
-                var records = consumer.poll(timeout);
-                measure(records);
-                if (!records.isEmpty()) {
-                    logRecords(records);
-                    handle(records);
-                    consumer.commitSync();
-                }
+                pollOnce(timeout);
             }
         } catch (WakeupException e) {
             LOGGER.warn("Kafka consumer has woken up.");
@@ -111,6 +106,17 @@ public class NativeConsumer implements AutoCloseable, ConsumerRebalanceListener 
 
     private boolean isStarted() {
         return state.get() == State.STARTED && !Thread.currentThread().isInterrupted();
+    }
+
+    @VisibleForTesting
+    void pollOnce(Duration timeout) {
+        var records = consumer.poll(timeout);
+        measure(records);
+        if (!records.isEmpty()) {
+            logRecords(records);
+            handle(records);
+            consumer.commitSync();
+        }
     }
 
     private void measure(ConsumerRecords<Long, String> records) {
