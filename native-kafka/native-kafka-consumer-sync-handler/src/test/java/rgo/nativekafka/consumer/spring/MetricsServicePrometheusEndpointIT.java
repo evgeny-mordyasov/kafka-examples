@@ -1,35 +1,11 @@
 package rgo.nativekafka.consumer.spring;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.client.EntityExchangeResult;
-import org.springframework.test.web.servlet.client.RestTestClient;
-import rgo.nativekafka.consumer.kafka.consumer.NativeConsumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(
-        classes = Main.class,
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
-)
-class MetricsServicePrometheusEndpointIT {
-
-    @LocalServerPort int port;
-    private RestTestClient client;
-
-    @BeforeEach
-    void setup() {
-        client = RestTestClient
-                .bindToServer()
-                .baseUrl("http://localhost:" + port)
-                .build();
-    }
-
-    @MockitoBean(name = "consumerAtLeastOnce")
-    private NativeConsumer consumerAtLeastOnce;
+class MetricsServicePrometheusEndpointIT extends IntegrationTest {
 
     @Test
     void customCountStatsTotal_exists() {
