@@ -1,4 +1,4 @@
-package rgo.nativekafka.consumer.spring.metrics;
+package rgo.nativekafka.consumer.spring;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -8,7 +8,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.client.EntityExchangeResult;
 import org.springframework.test.web.servlet.client.RestTestClient;
 import rgo.nativekafka.consumer.kafka.consumer.NativeConsumer;
-import rgo.nativekafka.consumer.spring.Main;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
