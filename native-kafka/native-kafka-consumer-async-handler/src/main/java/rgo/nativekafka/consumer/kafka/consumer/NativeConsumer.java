@@ -2,6 +2,7 @@ package rgo.nativekafka.consumer.kafka.consumer;
 
 import com.google.common.annotations.VisibleForTesting;
 import jakarta.annotation.Nonnull;
+import org.apache.kafka.clients.consumer.CloseOptions;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -268,7 +269,9 @@ public class NativeConsumer implements AutoCloseable, ConsumerRebalanceListener 
         if (previousState == State.STARTED) {
             consumer.wakeup();
         }
-        pollingExecutor.execute(consumer::close);
+        CloseOptions options = CloseOptions.timeout(Duration.ofMillis(properties.getCloseTimeoutMillis()))
+                .withGroupMembershipOperation(CloseOptions.GroupMembershipOperation.LEAVE_GROUP);
+        pollingExecutor.execute(() -> consumer.close(options));
         pollingExecutor.shutdown();
     }
 
