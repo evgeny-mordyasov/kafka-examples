@@ -153,7 +153,7 @@ public class NativeConsumer implements AutoCloseable, ConsumerRebalanceListener 
     }
 
     private boolean isOverflow() {
-        return buffer.getCountOfVectors() > properties.getBufferThreshold();
+        return buffer.getCountOfVectors() >= properties.getBufferThreshold();
     }
 
     private void logRecords(ConsumerRecords<Long, String> records) {
