@@ -38,7 +38,7 @@ public class NativeProducer implements AutoCloseable {
     public synchronized void run() {
         if (state.compareAndSet(State.CREATED, State.STARTED)) {
             pushingExecutor.scheduleWithFixedDelay(
-                    this::pushOnce,
+                    this::loopPushing,
                     0,
                     properties.getDelayMs(),
                     TimeUnit.MILLISECONDS);
@@ -46,11 +46,15 @@ public class NativeProducer implements AutoCloseable {
         }
     }
 
-    @VisibleForTesting
-    void pushOnce() {
+    private void loopPushing() {
         if (state.get() != State.STARTED) {
             return;
         }
+        pushOnce();
+    }
+
+    @VisibleForTesting
+    void pushOnce() {
         ProducerRecord<Long, String> message = new ProducerRecord<>(properties.getTopic(), randomKey(), randomValue());
         producer.send(message, callback());
     }
