@@ -7,11 +7,11 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rgo.nativekafka.common.Asserts;
+import rgo.nativekafka.common.concurrent.SafeExecutors;
 import rgo.nativekafka.common.kafka.ProducerFactory;
 import rgo.nativekafka.producer.properties.KafkaProducerProperties;
 
 import java.util.UUID;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -32,7 +32,7 @@ public class NativeProducer implements AutoCloseable {
         Asserts.positive(properties.getDelayMs(), "delayMs");
         Asserts.nonEmpty(properties.getProperties(), "properties");
         this.producer = Asserts.nonNull(producerFactory, "producerFactory").create(properties.getProperties());
-        this.pushingExecutor = Executors.newSingleThreadScheduledExecutor(runnable -> new Thread(runnable, "producer-kafka-pushing"));
+        this.pushingExecutor = SafeExecutors.newSingleThreadScheduledExecutor(runnable -> new Thread(runnable, "producer-kafka-pushing"));
     }
 
     public synchronized void run() {

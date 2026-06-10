@@ -10,8 +10,9 @@ import org.apache.kafka.common.errors.WakeupException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rgo.nativekafka.common.Asserts;
-import rgo.nativekafka.common.kafka.ConsumerFactory;
 import rgo.nativekafka.common.api.RequestMessage;
+import rgo.nativekafka.common.concurrent.SafeExecutors;
+import rgo.nativekafka.common.kafka.ConsumerFactory;
 import rgo.nativekafka.common.kafka.KafkaUtils;
 import rgo.nativekafka.common.metrics.MetricsService;
 import rgo.nativekafka.consumer.service.handler.DataHandler;
@@ -23,7 +24,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -60,7 +60,7 @@ public class NativeConsumer implements AutoCloseable, ConsumerRebalanceListener 
         this.metricsService = Asserts.nonNull(metricsService, "metricsService");
         this.consumer = Asserts.nonNull(consumerFactory, "consumerFactory").create(properties.getProperties());
         String shortClientId = KafkaUtils.shortClientId(properties.getProperties());
-        this.pollingExecutor = Executors.newSingleThreadScheduledExecutor(runnable -> new Thread(runnable, shortClientId));
+        this.pollingExecutor = SafeExecutors.newSingleThreadScheduledExecutor(runnable -> new Thread(runnable, shortClientId));
     }
 
     public void checkConnect() {
