@@ -17,7 +17,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -59,6 +58,17 @@ class NativeProducerTest {
     }
 
     @Test
+    void createInstance_withNullTopic_ShouldThrowIllegalArgumentException() {
+        ProducerFactory producerFactory = producerFactory(producer());
+        KafkaProducerProperties properties = properties();
+        properties.setTopic(null);
+
+        assertThatThrownBy(() -> new NativeProducer(producerFactory, properties))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("[topic] must not be null or empty.");
+    }
+
+    @Test
     void createInstance_withNonPositiveDelayMs_ShouldThrowIllegalArgumentException() {
         ProducerFactory producerFactory = producerFactory(producer());
         KafkaProducerProperties properties = properties();
@@ -70,6 +80,28 @@ class NativeProducerTest {
     }
 
     @Test
+    void createInstance_withNegativeDelayMs_ShouldThrowIllegalArgumentException() {
+        ProducerFactory producerFactory = producerFactory(producer());
+        KafkaProducerProperties properties = properties();
+        properties.setDelayMs(-1);
+
+        assertThatThrownBy(() -> new NativeProducer(producerFactory, properties))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("[delayMs] must be a positive number");
+    }
+
+    @Test
+    void createInstance_withNullPropertiesMap_ShouldThrowIllegalArgumentException() {
+        ProducerFactory producerFactory = producerFactory(producer());
+        KafkaProducerProperties properties = properties();
+        properties.setProperties(null);
+
+        assertThatThrownBy(() -> new NativeProducer(producerFactory, properties))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("[properties] must not be null or empty.");
+    }
+
+    @Test
     void createInstance_withEmptyProperties_ShouldThrowIllegalArgumentException() {
         ProducerFactory producerFactory = producerFactory(producer());
         KafkaProducerProperties properties = properties();
@@ -78,6 +110,16 @@ class NativeProducerTest {
         assertThatThrownBy(() -> new NativeProducer(producerFactory, properties))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("[properties] must not be null or empty.");
+    }
+
+    @Test
+    void createInstance_withProducerFactoryReturningNull_ShouldThrowIllegalArgumentException() {
+        ProducerFactory producerFactory = producerFactory(null);
+        KafkaProducerProperties properties = properties();
+
+        assertThatThrownBy(() -> new NativeProducer(producerFactory, properties))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("[producer] must not be null.");
     }
 
     @Test
@@ -103,6 +145,28 @@ class NativeProducerTest {
         assertThat(recordCaptor.getValue().topic()).isEqualTo(TOPIC);
         assertThat(recordCaptor.getValue().key()).isNotNull();
         assertThat(recordCaptor.getValue().value()).isNotEmpty();
+    }
+
+    @Test
+    void pushOnce_callbackWithSuccess_ShouldNotThrowException() {
+        Producer<Long, String> kafkaProducer = producer();
+        NativeProducer producer = producer(kafkaProducer);
+        ArgumentCaptor<Callback> callbackCaptor = ArgumentCaptor.forClass(Callback.class);
+        producer.pushOnce();
+        verify(kafkaProducer).send(any(), callbackCaptor.capture());
+
+        callbackCaptor.getValue().onCompletion(null, null);
+    }
+
+    @Test
+    void pushOnce_callbackWithException_ShouldNotThrowException() {
+        Producer<Long, String> kafkaProducer = producer();
+        NativeProducer producer = producer(kafkaProducer);
+        ArgumentCaptor<Callback> callbackCaptor = ArgumentCaptor.forClass(Callback.class);
+        producer.pushOnce();
+        verify(kafkaProducer).send(any(), callbackCaptor.capture());
+
+        callbackCaptor.getValue().onCompletion(null, new RuntimeException("boom"));
     }
 
     @Test

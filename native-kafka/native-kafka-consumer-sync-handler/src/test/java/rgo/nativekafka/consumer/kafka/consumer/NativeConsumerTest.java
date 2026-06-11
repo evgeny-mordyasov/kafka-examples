@@ -2,6 +2,7 @@ package rgo.nativekafka.consumer.kafka.consumer;
 
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.CloseOptions;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.MockConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
@@ -27,12 +28,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
@@ -91,6 +94,94 @@ class NativeConsumerTest {
         assertThatThrownBy(() -> new NativeConsumer(consumerFactory, handler, metricsService, properties))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("[properties] must not be null.");
+    }
+
+    @Test
+    void createInstance_withNullTopic_ShouldThrowIllegalArgumentException() {
+        MockConsumer<Long, String> kafkaConsumer = kafkaConsumer();
+        KafkaConsumerProperties properties = properties();
+        properties.setTopic(null);
+
+        assertThatThrownBy(() -> new NativeConsumer(consumerFactory(kafkaConsumer), mock(DataHandler.class), mock(MetricsService.class), properties))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("[topic] must not be null or empty.");
+    }
+
+    @Test
+    void createInstance_withEmptyTopic_ShouldThrowIllegalArgumentException() {
+        MockConsumer<Long, String> kafkaConsumer = kafkaConsumer();
+        KafkaConsumerProperties properties = properties();
+        properties.setTopic("");
+
+        assertThatThrownBy(() -> new NativeConsumer(consumerFactory(kafkaConsumer), mock(DataHandler.class), mock(MetricsService.class), properties))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("[topic] must not be null or empty.");
+    }
+
+    @Test
+    void createInstance_withNonPositiveCheckTimeoutMillis_ShouldThrowIllegalArgumentException() {
+        MockConsumer<Long, String> kafkaConsumer = kafkaConsumer();
+        KafkaConsumerProperties properties = properties();
+        properties.setCheckTimeoutMillis(0);
+
+        assertThatThrownBy(() -> new NativeConsumer(consumerFactory(kafkaConsumer), mock(DataHandler.class), mock(MetricsService.class), properties))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("[checkTimeoutMillis] must be a positive number");
+    }
+
+    @Test
+    void createInstance_withNonPositivePollTimeoutMillis_ShouldThrowIllegalArgumentException() {
+        MockConsumer<Long, String> kafkaConsumer = kafkaConsumer();
+        KafkaConsumerProperties properties = properties();
+        properties.setPollTimeoutMillis(0);
+
+        assertThatThrownBy(() -> new NativeConsumer(consumerFactory(kafkaConsumer), mock(DataHandler.class), mock(MetricsService.class), properties))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("[pollTimeoutMillis] must be a positive number");
+    }
+
+    @Test
+    void createInstance_withNonPositiveCloseTimeoutMillis_ShouldThrowIllegalArgumentException() {
+        MockConsumer<Long, String> kafkaConsumer = kafkaConsumer();
+        KafkaConsumerProperties properties = properties();
+        properties.setCloseTimeoutMillis(0);
+
+        assertThatThrownBy(() -> new NativeConsumer(consumerFactory(kafkaConsumer), mock(DataHandler.class), mock(MetricsService.class), properties))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("[closeTimeoutMillis] must be a positive number");
+    }
+
+    @Test
+    void createInstance_withNullPropertiesMap_ShouldThrowIllegalArgumentException() {
+        MockConsumer<Long, String> kafkaConsumer = kafkaConsumer();
+        KafkaConsumerProperties properties = properties();
+        properties.setProperties(null);
+
+        assertThatThrownBy(() -> new NativeConsumer(consumerFactory(kafkaConsumer), mock(DataHandler.class), mock(MetricsService.class), properties))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("[properties] must not be null or empty.");
+    }
+
+    @Test
+    void createInstance_withEmptyPropertiesMap_ShouldThrowIllegalArgumentException() {
+        MockConsumer<Long, String> kafkaConsumer = kafkaConsumer();
+        KafkaConsumerProperties properties = properties();
+        properties.setProperties(Map.of());
+
+        assertThatThrownBy(() -> new NativeConsumer(consumerFactory(kafkaConsumer), mock(DataHandler.class), mock(MetricsService.class), properties))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("[properties] must not be null or empty.");
+    }
+
+    @Test
+    void createInstance_withoutClientId_ShouldThrowIllegalArgumentException() {
+        MockConsumer<Long, String> kafkaConsumer = kafkaConsumer();
+        KafkaConsumerProperties properties = properties();
+        properties.setProperties(Map.of("bootstrap.servers", "localhost:9092"));
+
+        assertThatThrownBy(() -> new NativeConsumer(consumerFactory(kafkaConsumer), mock(DataHandler.class), mock(MetricsService.class), properties))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("[client.id] must not be null.");
     }
 
     @Test
@@ -281,6 +372,35 @@ class NativeConsumerTest {
         verifyNoInteractions(handler, metricsService);
     }
 
+    @Test
+    void close_calledTwice_ShouldCloseKafkaConsumerOnce() {
+        Consumer<Long, String> kafkaConsumer = mock(Consumer.class);
+        DataHandler handler = mock(DataHandler.class);
+        MetricsService metricsService = mock(MetricsService.class);
+        NativeConsumer consumer = new NativeConsumer(consumerFactory(kafkaConsumer), handler, metricsService, properties());
+
+        consumer.close();
+        consumer.close();
+
+        verify(kafkaConsumer, timeout(1_000).times(1)).close(any(CloseOptions.class));
+        verifyNoInteractions(handler, metricsService);
+    }
+
+    @Test
+    void run_afterClose_ShouldNotPollKafkaConsumer() {
+        Consumer<Long, String> kafkaConsumer = mock(Consumer.class);
+        DataHandler handler = mock(DataHandler.class);
+        MetricsService metricsService = mock(MetricsService.class);
+        NativeConsumer consumer = new NativeConsumer(consumerFactory(kafkaConsumer), handler, metricsService, properties());
+
+        consumer.close();
+        consumer.run();
+
+        verify(kafkaConsumer, timeout(1_000).times(1)).close(any(CloseOptions.class));
+        verify(kafkaConsumer, times(0)).poll(any(Duration.class));
+        verifyNoInteractions(handler, metricsService);
+    }
+
     private static NativeConsumer consumer(
             MockConsumer<Long, String> kafkaConsumer,
             DataHandler handler,
@@ -310,7 +430,7 @@ class NativeConsumerTest {
         return properties;
     }
 
-    private static ConsumerFactory consumerFactory(MockConsumer<Long, String> kafkaConsumer) {
+    private static ConsumerFactory consumerFactory(Consumer<Long, String> kafkaConsumer) {
         return new ConsumerFactory() {
             @Override
             @SuppressWarnings("unchecked")
