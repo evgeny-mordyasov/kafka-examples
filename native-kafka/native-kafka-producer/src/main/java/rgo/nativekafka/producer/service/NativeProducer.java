@@ -31,7 +31,7 @@ public class NativeProducer implements AutoCloseable {
         Asserts.nonEmpty(properties.getTopic(), "topic");
         Asserts.positive(properties.getDelayMs(), "delayMs");
         Asserts.nonEmpty(properties.getProperties(), "properties");
-        this.producer = Asserts.nonNull(producerFactory, "producerFactory").create(properties.getProperties());
+        this.producer = Asserts.nonNull(Asserts.nonNull(producerFactory, "producerFactory").create(properties.getProperties()), "producer");
         this.pushingExecutor = SafeExecutors.newSingleThreadScheduledExecutor(runnable -> new Thread(runnable, "producer-kafka-pushing"));
     }
 
