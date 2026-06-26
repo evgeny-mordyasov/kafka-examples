@@ -139,20 +139,32 @@ public class NativeConsumer implements AutoCloseable, ConsumerRebalanceListener 
 
         for (TopicPartition partition : records.partitions()) {
             for (ConsumerRecord<Long, String> record : records.records(partition)) {
-                try {
-                    handler.handle(List.of(KafkaUtils.rqMessage(record)));
-                    offsetsToCommit.put(partition, new OffsetAndMetadata(record.offset() + 1));
-                } catch (RuntimeException e) {
-                    commitProcessedOffsets(offsetsToCommit);
-                    seekToUnprocessed(records, processedPartitions, partition, record.offset());
-                    LOGGER.error("Handle failed. Processed offsets committed, unprocessed records seeked.", e);
+                if (!handleRecord(records, processedPartitions, offsetsToCommit, partition, record)) {
                     return;
                 }
             }
             processedPartitions.add(partition);
         }
-
         commitProcessedOffsets(offsetsToCommit);
+    }
+
+    private boolean handleRecord(
+            ConsumerRecords<Long, String> records,
+            Set<TopicPartition> processedPartitions,
+            Map<TopicPartition, OffsetAndMetadata> offsetsToCommit,
+            TopicPartition partition,
+            ConsumerRecord<Long, String> record
+    ) {
+        try {
+            handler.handle(List.of(KafkaUtils.rqMessage(record)));
+            offsetsToCommit.put(partition, new OffsetAndMetadata(record.offset() + 1));
+            return true;
+        } catch (RuntimeException e) {
+            commitProcessedOffsets(offsetsToCommit);
+            seekToUnprocessed(records, processedPartitions, partition, record.offset());
+            LOGGER.error("Handle failed. Processed offsets committed, unprocessed records seeked.", e);
+            return false;
+        }
     }
 
     private void commitProcessedOffsets(Map<TopicPartition, OffsetAndMetadata> offsetsToCommit) {
