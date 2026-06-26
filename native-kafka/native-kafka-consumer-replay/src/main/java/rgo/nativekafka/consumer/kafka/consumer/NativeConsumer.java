@@ -12,6 +12,7 @@ import org.apache.kafka.common.errors.WakeupException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rgo.nativekafka.common.Asserts;
+import rgo.nativekafka.common.api.RequestMessage;
 import rgo.nativekafka.common.concurrent.SafeExecutors;
 import rgo.nativekafka.common.kafka.ConsumerFactory;
 import rgo.nativekafka.common.kafka.KafkaUtils;
@@ -134,42 +135,38 @@ public class NativeConsumer implements AutoCloseable, ConsumerRebalanceListener 
     }
 
     private void handle(ConsumerRecords<Long, String> records) {
-        Map<TopicPartition, OffsetAndMetadata> offsetsToCommit = new HashMap<>();
-        Set<TopicPartition> remainingPartitions = new HashSet<>(records.partitions());
-
-        for (TopicPartition partition : records.partitions()) {
-            for (ConsumerRecord<Long, String> record : records.records(partition)) {
-                try {
-                    handler.handle(List.of(KafkaUtils.rqMessage(record)));
-                    offsetsToCommit.put(partition, new OffsetAndMetadata(record.offset() + 1));
-                } catch (RuntimeException e) {
-                    commitProcessedOffsets(offsetsToCommit);
-                    seekToUnprocessed(records, remainingPartitions, partition, record.offset());
-                    LOGGER.error("Handle failed. Processed offsets committed, unprocessed records seeked.", e);
-                    return;
-                }
+        Map<TopicPartition, OffsetAndMetadata> processedOffsets = new HashMap<>();
+        for (ConsumerRecord<Long, String> record : records) {
+            try {
+                RequestMessage<String> message = KafkaUtils.rqMessage(record);
+                handler.handle(message);
+                TopicPartition tp = new TopicPartition(record.topic(), record.partition());
+                OffsetAndMetadata oam = new OffsetAndMetadata(record.offset() + 1);
+                processedOffsets.put(tp, oam);
+            } catch (Exception e) {
+                LOGGER.error("Handle failed: {}", briefRecord(record), e);
+                seekToUnprocessed(records, processedOffsets);
+                break;
             }
-            remainingPartitions.remove(partition);
         }
-        commitProcessedOffsets(offsetsToCommit);
-    }
-
-    private void commitProcessedOffsets(Map<TopicPartition, OffsetAndMetadata> offsetsToCommit) {
-        if (!offsetsToCommit.isEmpty()) {
-            consumer.commitSync(offsetsToCommit);
+        if (!processedOffsets.isEmpty()) {
+            LOGGER.info("Commit offsets: {}", processedOffsets);
+            consumer.commitSync(processedOffsets);
         }
     }
 
     private void seekToUnprocessed(
             ConsumerRecords<Long, String> records,
-            Set<TopicPartition> remainingPartitions,
-            TopicPartition failedPartition,
-            long failedOffset
+            Map<TopicPartition, OffsetAndMetadata> processedOffsets
     ) {
-        consumer.seek(failedPartition, failedOffset);
-        remainingPartitions.stream()
-                .filter(partition -> !partition.equals(failedPartition))
-                .forEach(partition -> consumer.seek(partition, records.records(partition).iterator().next().offset()));
+        for (TopicPartition partition : records.partitions()) {
+            OffsetAndMetadata processedOffset = processedOffsets.get(partition);
+            long offset = processedOffset == null
+                    ? records.records(partition).getFirst().offset()
+                    : processedOffset.offset();
+            LOGGER.warn("Seek {} to offset {}", partition, offset);
+            consumer.seek(partition, offset);
+        }
     }
 
     @Override

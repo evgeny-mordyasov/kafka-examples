@@ -20,14 +20,12 @@ import rgo.nativekafka.consumer.service.handler.DataHandler;
 import rgo.nativekafka.consumer.spring.properties.KafkaConsumerProperties;
 
 import java.time.Duration;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -232,7 +230,7 @@ class NativeConsumerTest {
 
         verify(metricsService).reportIncomingMessages(0);
         verify(metricsService).reportConsumerLagSeconds(TOPIC, 0);
-        verify(handler, never()).handle(anyList());
+        verify(handler, never()).handle(any());
         assertThat(kafkaConsumer.committed(Set.of(PARTITION))).isEmpty();
     }
 
@@ -243,7 +241,7 @@ class NativeConsumerTest {
         MetricsService metricsService = mock(MetricsService.class);
         NativeConsumer consumer = consumer(kafkaConsumer, handler, metricsService);
         addRecord(kafkaConsumer, 0, 0L, 7L, "payload");
-        doThrow(new RuntimeException("Simulated error")).when(handler).handle(anyList());
+        doThrow(new RuntimeException("Simulated error")).when(handler).handle(any());
 
         consumer.pollOnce(Duration.ZERO);
 
@@ -263,7 +261,7 @@ class NativeConsumerTest {
         addRecord(kafkaConsumer, 0, 1L, 20L, "second");
         org.mockito.Mockito.doNothing()
                 .doThrow(new RuntimeException("Simulated error"))
-                .when(handler).handle(anyList());
+                .when(handler).handle(any());
 
         consumer.pollOnce(Duration.ZERO);
 
@@ -285,7 +283,7 @@ class NativeConsumerTest {
         testConsumer.assign();
         testConsumer.addRecord(0, 0L, 10L, "failed");
         testConsumer.addRecord(1, 0L, 20L, "not-processed");
-        doThrow(new RuntimeException("Simulated error")).when(handler).handle(anyList());
+        doThrow(new RuntimeException("Simulated error")).when(handler).handle(any());
 
         consumer.pollOnce(Duration.ZERO);
 
@@ -305,10 +303,9 @@ class NativeConsumerTest {
 
         consumer.pollOnce(Duration.ZERO);
 
-        ArgumentCaptor<List<RequestMessage<String>>> captor = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<RequestMessage<String>> captor = ArgumentCaptor.forClass(RequestMessage.class);
         verify(handler).handle(captor.capture());
         assertThat(captor.getValue())
-                .singleElement()
                 .satisfies(message -> {
                     assertThat(message.key()).isEqualTo(42L);
                     assertThat(message.payload()).isEqualTo("payload");
@@ -338,9 +335,9 @@ class NativeConsumerTest {
 
         consumer.pollOnce(Duration.ZERO);
 
-        ArgumentCaptor<List<RequestMessage<String>>> captor = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<RequestMessage<String>> captor = ArgumentCaptor.forClass(RequestMessage.class);
         verify(handler, times(3)).handle(captor.capture());
-        assertThat(captor.getAllValues().stream().flatMap(Collection::stream).toList())
+        assertThat(captor.getAllValues())
                 .extracting(RequestMessage::payload)
                 .containsExactlyInAnyOrder("first", "second", "third");
         verify(metricsService).reportIncomingMessages(3);
@@ -364,7 +361,7 @@ class NativeConsumerTest {
         consumer.run();
 
         verify(metricsService, timeout(1_000)).incFailedConsumerPoll();
-        verify(handler, never()).handle(anyList());
+        verify(handler, never()).handle(any());
         consumer.close();
         awaitClosed(kafkaConsumer);
     }
@@ -380,7 +377,7 @@ class NativeConsumerTest {
         consumer.run();
 
         verify(metricsService, timeout(1_000).atLeastOnce()).reportIncomingMessages(0);
-        verify(handler, never()).handle(anyList());
+        verify(handler, never()).handle(any());
         consumer.close();
         awaitClosed(testConsumer.getConsumer());
     }
