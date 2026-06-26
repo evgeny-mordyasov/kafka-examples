@@ -12,6 +12,5 @@ public class LoggingDataHandler implements DataHandler {
     @Override
     public void handle(RequestMessage<String> message) {
         LOGGER.info(StringifyUtils.briefMessage(message));
-        throw new RuntimeException();
     }
 }

@@ -4,6 +4,7 @@ import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.CloseOptions;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.MockConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
@@ -20,6 +21,7 @@ import rgo.nativekafka.consumer.service.handler.DataHandler;
 import rgo.nativekafka.consumer.spring.properties.KafkaConsumerProperties;
 
 import java.time.Duration;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,6 +32,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -272,24 +275,30 @@ class NativeConsumerTest {
     }
 
     @Test
-    void pollOnce_manyPartitionsHandleFailed_ShouldSeekNotProcessedPartitionsToFirstRecordOffset() {
+    void pollOnce_manyPartitionsHandleFailed_ShouldProcessOtherPartitions() {
         TopicPartition failedPartition = new TopicPartition(TOPIC, 0);
-        TopicPartition notProcessedPartition = new TopicPartition(TOPIC, 1);
-        TestConsumer testConsumer = new TestConsumer(TOPIC);
-        MockConsumer<Long, String> kafkaConsumer = testConsumer.getConsumer();
+        TopicPartition processedPartition = new TopicPartition(TOPIC, 1);
+        Consumer<Long, String> kafkaConsumer = mock(Consumer.class);
         DataHandler handler = mock(DataHandler.class);
         MetricsService metricsService = mock(MetricsService.class);
-        NativeConsumer consumer = consumer(kafkaConsumer, handler, metricsService);
-        testConsumer.assign();
-        testConsumer.addRecord(0, 0L, 10L, "failed");
-        testConsumer.addRecord(1, 0L, 20L, "not-processed");
-        doThrow(new RuntimeException("Simulated error")).when(handler).handle(any());
+        NativeConsumer consumer = new NativeConsumer(consumerFactory(kafkaConsumer), handler, metricsService, properties());
+        Map<TopicPartition, List<ConsumerRecord<Long, String>>> batch = new LinkedHashMap<>();
+        batch.put(failedPartition, List.of(new ConsumerRecord<>(TOPIC, 0, 0L, 10L, "failed")));
+        batch.put(processedPartition, List.of(new ConsumerRecord<>(TOPIC, 1, 0L, 20L, "processed")));
+        doReturn(new ConsumerRecords<>(batch)).when(kafkaConsumer).poll(Duration.ZERO);
+        doAnswer(invocation -> {
+            RequestMessage<String> message = invocation.getArgument(0);
+            if ("failed".equals(message.payload())) {
+                throw new RuntimeException("Simulated error");
+            }
+            return null;
+        }).when(handler).handle(any());
 
         consumer.pollOnce(Duration.ZERO);
 
-        assertThat(kafkaConsumer.committed(testConsumer.getPartitions())).isEmpty();
-        assertThat(kafkaConsumer.position(failedPartition)).isZero();
-        assertThat(kafkaConsumer.position(notProcessedPartition)).isZero();
+        verify(handler, times(2)).handle(any());
+        verify(kafkaConsumer).seek(failedPartition, 0L);
+        verify(kafkaConsumer).commitSync(Map.of(processedPartition, new OffsetAndMetadata(1L)));
     }
 
     @Test
