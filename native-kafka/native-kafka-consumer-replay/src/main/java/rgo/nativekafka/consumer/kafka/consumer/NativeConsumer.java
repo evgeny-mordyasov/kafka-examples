@@ -136,17 +136,17 @@ public class NativeConsumer implements AutoCloseable, ConsumerRebalanceListener 
 
     private void handle(ConsumerRecords<Long, String> records) {
         Map<TopicPartition, OffsetAndMetadata> processedOffsets = new HashMap<>();
-        for (ConsumerRecord<Long, String> record : records) {
-            try {
-                RequestMessage<String> message = KafkaUtils.rqMessage(record);
-                handler.handle(message);
-                TopicPartition tp = new TopicPartition(record.topic(), record.partition());
-                OffsetAndMetadata oam = new OffsetAndMetadata(record.offset() + 1);
-                processedOffsets.put(tp, oam);
-            } catch (Exception e) {
-                LOGGER.error("Handle failed: {}", briefRecord(record), e);
-                seekToUnprocessed(records, processedOffsets);
-                break;
+        for (TopicPartition partition : records.partitions()) {
+            for (ConsumerRecord<Long, String> record : records.records(partition)) {
+                try {
+                    RequestMessage<String> message = KafkaUtils.rqMessage(record);
+                    handler.handle(message);
+                    processedOffsets.put(partition, new OffsetAndMetadata(record.offset() + 1));
+                } catch (Exception e) {
+                    LOGGER.error("Handle failed: {}", briefRecord(record), e);
+                    seekToUnprocessed(partition, record, processedOffsets);
+                    break;
+                }
             }
         }
         if (!processedOffsets.isEmpty()) {
@@ -156,17 +156,14 @@ public class NativeConsumer implements AutoCloseable, ConsumerRebalanceListener 
     }
 
     private void seekToUnprocessed(
-            ConsumerRecords<Long, String> records,
+            TopicPartition partition,
+            ConsumerRecord<Long, String> record,
             Map<TopicPartition, OffsetAndMetadata> processedOffsets
     ) {
-        for (TopicPartition partition : records.partitions()) {
-            OffsetAndMetadata processedOffset = processedOffsets.get(partition);
-            long offset = processedOffset == null
-                    ? records.records(partition).getFirst().offset()
-                    : processedOffset.offset();
-            LOGGER.warn("Seek {} to offset {}", partition, offset);
-            consumer.seek(partition, offset);
-        }
+        OffsetAndMetadata processedOffset = processedOffsets.get(partition);
+        long offset = processedOffset == null ? record.offset() : processedOffset.offset();
+        LOGGER.warn("Seek {} to offset {}", partition, offset);
+        consumer.seek(partition, offset);
     }
 
     @Override
